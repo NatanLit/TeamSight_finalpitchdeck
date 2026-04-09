@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>TeamSight — Питч Дек</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --orange: #E8650A;
+  --orange-dim: #b84f08;
+  --bg: #0d0d0d;
+  --bg2: #141414;
+  --bg3: #1c1c1c;
+  --border: #282828;
+  --border2: #363636;
+  --text: #ffffff;
+  --text2: #cccccc;
+  --text3: #888888;
+  --red: #E24B4A;
+  --green: #639922;
+}
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; }
+
+/* ── NAV ── */
+.nav {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  height:48px;
+  background:rgba(13,13,13,0.97);
+  border-bottom:0.5px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 40px;
+}
+.nav-logo { font-family:'Playfair Display',serif; font-size:17px; }
+.nav-logo span { color:var(--orange); font-style:italic; }
+.nav-counter { font-size:12px; color:var(--text3); }
+
+/* ── CONTROLS ── */
+.controls {
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  height:48px;
+  background:rgba(13,13,13,0.97);
+  border-top:0.5px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0 40px; gap:16px;
+}
+.dots-wrap { display:flex; gap:5px; flex-wrap:wrap; justify-content:center; flex:1; }
+.dot { width:6px; height:6px; border-radius:50%; background:var(--border2); cursor:pointer; transition:background 0.15s; flex-shrink:0; }
+.dot.active { background:var(--orange); transform:scale(1.3); }
+.arrow-btn {
+  background:none; border:0.5px solid var(--border2); border-radius:6px;
+  color:var(--text2); font-size:16px; cursor:pointer; padding:4px 14px;
+  transition:border-color 0.15s,color 0.15s; flex-shrink:0;
+}
+.arrow-btn:hover { border-color:var(--orange); color:var(--orange); }
+.arrow-btn:disabled { opacity:0.2; cursor:default; }
+
+/* ── DECK ── */
+#deck { position:fixed; top:48px; left:0; right:0; bottom:48px; overflow:hidden; }
+
+/* ── SLIDE ── */
+.slide {
+  position:absolute; inset:0;
+  display:none;
+  flex-direction:column;
+  justify-content:center;
+  padding:28px 72px;
+  overflow:hidden;
+}
+.slide.active { display:flex; }
+
+/* label */
+.sl { font-size:clamp(9px,0.8vw,12px); letter-spacing:3px; color:var(--orange); text-transform:uppercase; margin-bottom:10px; flex-shrink:0; }
+h2 { font-family:'Playfair Display',serif; font-size:clamp(26px,3.2vw,52px); font-weight:500; line-height:1.1; flex-shrink:0; }
+.sub { font-size:clamp(13px,1.2vw,17px); color:var(--text2); line-height:1.6; max-width:600px; margin-top:6px; flex-shrink:0; }
+
+/* ── CARD / UTILS ── */
+.card { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(12px,1.2vw,20px); }
+.card-label { font-size:clamp(8px,0.7vw,11px); letter-spacing:2px; color:var(--text3); text-transform:uppercase; margin-bottom:8px; }
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; }
+.g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+
+/* ─────────────────────────────
+   S1 TITLE
+───────────────────────────── */
+.title-logo { font-family:'Playfair Display',serif; font-size:clamp(48px,7vw,100px); font-weight:700; line-height:1; margin-bottom:clamp(10px,1.2vw,18px); }
+.title-logo span { color:var(--orange); font-style:italic; }
+.title-tagline { font-size:clamp(14px,1.4vw,20px); color:var(--text2); max-width:500px; margin-bottom:clamp(16px,1.8vw,26px); line-height:1.55; }
+.title-tags { display:flex; gap:7px; flex-wrap:wrap; margin-bottom:clamp(20px,2vw,32px); }
+.tag { border:0.5px solid var(--border2); border-radius:20px; padding:4px 12px; font-size:clamp(10px,0.9vw,13px); color:var(--text3); }
+.title-metrics { display:flex; gap:2px; }
+.mbox { background:var(--bg3); border:0.5px solid var(--border); padding:clamp(12px,1.2vw,18px) clamp(18px,2vw,26px); min-width:120px; }
+.mbox:first-child { border-radius:7px 0 0 7px; }
+.mbox:last-child { border-radius:0 7px 7px 0; }
+.mnum { font-family:'Playfair Display',serif; font-size:clamp(22px,2.4vw,34px); font-weight:700; margin-bottom:3px; }
+.mlabel { font-size:clamp(9px,0.8vw,12px); color:var(--text3); }
+.founders { margin-top:clamp(16px,1.8vw,26px); font-size:clamp(12px,1.1vw,16px); color:var(--text3); }
+.founders span { color:var(--text2); }
+
+/* ─────────────────────────────
+   S2 PROBLEM
+───────────────────────────── */
+.pstat { display:flex; align-items:flex-start; gap:20px; padding:clamp(10px,1.2vw,18px) 0; border-bottom:0.5px solid var(--border); }
+.pstat:last-child { border-bottom:none; }
+.pnum { font-family:'Playfair Display',serif; font-size:clamp(34px,4.5vw,60px); font-weight:700; color:var(--orange); line-height:1; flex-shrink:0; min-width:clamp(130px,14vw,190px); }
+.pdesc h3 { font-size:clamp(14px,1.4vw,20px); font-weight:500; margin-bottom:4px; }
+.pdesc p { font-size:clamp(12px,1.1vw,16px); color:var(--text2); line-height:1.55; }
+.pclosing { margin-top:clamp(12px,1.4vw,20px); font-size:clamp(15px,1.5vw,22px); color:var(--text2); font-family:'Playfair Display',serif; font-style:italic; }
+
+/* ─────────────────────────────
+   S3 SOLUTION
+───────────────────────────── */
+.fgrid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:clamp(12px,1.4vw,20px); }
+.feat { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(12px,1.3vw,18px); }
+.ftag { display:inline-block; font-size:clamp(8px,0.7vw,11px); letter-spacing:1px; padding:3px 9px; border-radius:4px; margin-bottom:8px; background:var(--orange); color:#fff; }
+.ftag.o { background:transparent; border:0.5px solid var(--orange); color:var(--orange); }
+.feat h4 { font-size:clamp(13px,1.3vw,18px); font-weight:500; margin-bottom:4px; }
+.feat p { font-size:clamp(11px,1.1vw,15px); color:var(--text2); line-height:1.55; }
+.bottom-bar { margin-top:clamp(8px,1vw,14px); padding:clamp(9px,1vw,14px) 16px; background:var(--bg3); border:0.5px solid var(--border); border-left:2px solid var(--orange); border-radius:0 8px 8px 0; font-size:clamp(12px,1.1vw,16px); color:var(--text2); }
+
+/* ─────────────────────────────
+   S4 MARKET
+───────────────────────────── */
+.tam-row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; background:var(--border); border-radius:8px; overflow:hidden; margin-top:clamp(12px,1.4vw,20px); margin-bottom:clamp(10px,1.2vw,16px); }
+.tambox { background:var(--bg2); padding:clamp(14px,1.6vw,24px); text-align:center; }
+.tamlabel { font-size:clamp(8px,0.75vw,11px); letter-spacing:2px; color:var(--text3); margin-bottom:8px; }
+.tamnum { font-family:'Playfair Display',serif; font-size:clamp(24px,3.2vw,44px); font-weight:700; margin-bottom:4px; }
+.tamnum.o { color:var(--orange); }
+.tamdesc { font-size:clamp(10px,0.9vw,13px); color:var(--text3); }
+.tgrid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; }
+.tcard { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(12px,1.3vw,18px); }
+.ttitle { font-size:clamp(8px,0.75vw,11px); letter-spacing:1px; color:var(--orange); margin-bottom:10px; }
+.trow { display:flex; justify-content:space-between; align-items:baseline; padding:clamp(4px,0.5vw,8px) 0; border-bottom:0.5px solid var(--border); }
+.trow:last-child { border-bottom:none; }
+.tkey { font-size:clamp(11px,1vw,15px); color:var(--text2); }
+.tval { font-size:clamp(13px,1.2vw,17px); font-weight:500; }
+.tval.o { color:var(--orange); }
+
+/* ─────────────────────────────
+   S5 BIZ MODEL
+───────────────────────────── */
+.pgrid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:clamp(10px,1.2vw,18px); margin-bottom:clamp(8px,1vw,14px); }
+.plan { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(12px,1.4vw,20px); position:relative; }
+.plan.pop { border-color:var(--orange); }
+.pbadge { position:absolute; top:-9px; left:50%; transform:translateX(-50%); background:var(--orange); color:#fff; font-size:clamp(8px,0.75vw,11px); padding:2px 10px; border-radius:8px; white-space:nowrap; }
+.pname { font-size:clamp(8px,0.75vw,11px); letter-spacing:2px; color:var(--text3); margin-bottom:8px; }
+.pprice { font-family:'Playfair Display',serif; font-size:clamp(24px,2.8vw,38px); font-weight:700; margin-bottom:2px; }
+.pusers { font-size:clamp(10px,0.9vw,13px); color:var(--text3); margin-bottom:10px; }
+.plist { list-style:none; }
+.plist li { font-size:clamp(11px,1vw,14px); color:var(--text2); padding:clamp(3px,0.4vw,6px) 0; border-bottom:0.5px solid var(--border); display:flex; gap:6px; }
+.plist li:last-child { border-bottom:none; }
+.plist li::before { content:'—'; color:var(--orange); font-size:9px; flex-shrink:0; }
+.ugrid { display:grid; grid-template-columns:repeat(5,1fr); gap:7px; }
+.ubox { background:var(--bg3); border:0.5px solid var(--border); border-radius:7px; padding:clamp(8px,1vw,14px); text-align:center; }
+.ulabel { font-size:clamp(9px,0.8vw,12px); color:var(--text3); margin-bottom:4px; }
+.uval { font-size:clamp(14px,1.4vw,20px); font-weight:500; }
+.uval.o { color:var(--orange); }
+
+/* ─────────────────────────────
+   S6 COMPETITORS — SVG chart
+───────────────────────────── */
+.comp-note { font-size:clamp(11px,1vw,14px); color:var(--orange); margin-top:10px; text-align:center; flex-shrink:0; }
+
+/* ─────────────────────────────
+   S7 ADVANTAGES
+───────────────────────────── */
+.agrid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:clamp(10px,1.2vw,18px); }
+.adv { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(12px,1.3vw,18px); }
+.abadge { display:inline-block; font-size:clamp(8px,0.7vw,11px); font-weight:500; letter-spacing:1px; padding:3px 10px; border-radius:4px; margin-bottom:8px; }
+.abadge.f { background:var(--orange); color:#fff; }
+.abadge.o { border:0.5px solid var(--orange); color:var(--orange); }
+.adv p { font-size:clamp(11px,1.1vw,15px); color:var(--text2); line-height:1.55; }
+.adv-full { grid-column:1/-1; background:var(--bg3); border:0.5px solid var(--orange); border-radius:8px; padding:clamp(12px,1.3vw,18px); display:grid; grid-template-columns:auto 1fr 1fr 1fr; gap:14px; align-items:start; }
+.adv-full-badge { background:var(--orange); color:#fff; font-size:clamp(8px,0.7vw,11px); font-weight:500; letter-spacing:1px; padding:4px 10px; border-radius:4px; white-space:nowrap; align-self:center; }
+.adv-full-col h4 { font-size:clamp(11px,1vw,14px); font-weight:500; margin-bottom:3px; }
+.adv-full-col p { font-size:clamp(10px,0.9vw,13px); color:var(--text3); line-height:1.5; }
+
+/* ─────────────────────────────
+   S8 GTM
+───────────────────────────── */
+.gtrack { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(12px,1.3vw,18px); }
+.ghead { display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.gbadge { font-size:clamp(8px,0.75vw,11px); font-weight:500; letter-spacing:1px; padding:3px 9px; border-radius:4px; color:#fff; }
+.gphase { font-size:clamp(9px,0.85vw,12px); color:var(--text3); }
+.gtitle { font-size:clamp(13px,1.3vw,17px); font-weight:500; margin-bottom:10px; }
+.gitem { font-size:clamp(11px,1.05vw,15px); color:var(--text2); padding:clamp(4px,0.5vw,7px) 0; border-bottom:0.5px solid var(--border); display:flex; gap:7px; }
+.gitem:last-of-type { border-bottom:none; }
+.gitem::before { content:'—'; color:var(--orange); flex-shrink:0; }
+.gtarget { display:flex; justify-content:space-between; margin-top:10px; padding-top:8px; border-top:0.5px solid var(--border); font-size:clamp(10px,0.9vw,13px); }
+.gtarget-l { color:var(--text3); letter-spacing:1px; }
+.gpartners { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(9px,1vw,14px) 16px; margin-top:10px; display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+.gplabel { font-size:clamp(8px,0.75vw,11px); letter-spacing:1px; color:var(--text3); flex-shrink:0; }
+.gchip { background:var(--bg2); border:0.5px solid var(--border2); border-radius:4px; padding:4px 10px; font-size:clamp(11px,1vw,14px); color:var(--text2); }
+
+/* ─────────────────────────────
+   S9 TECH
+───────────────────────────── */
+.tlayers { display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; background:var(--border); border-radius:8px; overflow:hidden; margin-top:clamp(12px,1.4vw,18px); margin-bottom:clamp(8px,1vw,12px); }
+.tlayer { background:var(--bg3); padding:clamp(12px,1.3vw,18px); }
+.tlabel { font-size:clamp(8px,0.75vw,11px); letter-spacing:1px; color:var(--orange); margin-bottom:10px; }
+.titem { background:var(--bg2); border:0.5px solid var(--border); border-radius:5px; padding:clamp(6px,0.8vw,11px) 10px; margin-bottom:6px; }
+.titem h5 { font-size:clamp(12px,1.1vw,15px); font-weight:500; margin-bottom:2px; }
+.titem p { font-size:clamp(10px,0.9vw,13px); color:var(--text3); }
+.tstack { display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
+.tchip { background:var(--bg3); border:0.5px solid var(--border2); border-radius:5px; padding:clamp(7px,0.9vw,12px); text-align:center; }
+.tchip-name { font-size:clamp(11px,1.05vw,15px); font-weight:500; color:var(--orange); margin-bottom:1px; }
+.tchip-role { font-size:clamp(9px,0.8vw,12px); color:var(--text3); }
+.tmoat { border:0.5px solid var(--border); border-left:2px solid var(--orange); border-radius:0 8px 8px 0; padding:clamp(9px,1vw,14px) 15px; margin-top:9px; font-size:clamp(12px,1.1vw,16px); color:var(--text2); }
+.tmoat span { color:var(--text); }
+
+/* ─────────────────────────────
+   S10 FINANCIALS
+───────────────────────────── */
+.fmilestones { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; background:var(--border); border-radius:8px; overflow:hidden; margin-top:clamp(12px,1.4vw,18px); margin-bottom:clamp(8px,1vw,12px); }
+.fmile { background:var(--bg2); padding:clamp(12px,1.4vw,20px); text-align:center; }
+.fmlabel { font-size:clamp(8px,0.75vw,11px); letter-spacing:1px; color:var(--text3); margin-bottom:6px; }
+.fmnum { font-family:'Playfair Display',serif; font-size:clamp(22px,2.4vw,34px); font-weight:700; color:var(--orange); margin-bottom:2px; }
+.fmdesc { font-size:clamp(10px,0.9vw,13px); color:var(--text3); }
+.fchart { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(10px,1.1vw,16px); margin-bottom:clamp(8px,1vw,12px); }
+.fclabel { font-size:clamp(8px,0.75vw,11px); letter-spacing:1px; color:var(--text3); margin-bottom:10px; }
+.bars { display:flex; align-items:flex-end; gap:3px; height:52px; }
+.bar { flex:1; border-radius:2px 2px 0 0; }
+.funit { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(12px,1.3vw,18px); }
+.funit-label { font-size:clamp(8px,0.75vw,11px); letter-spacing:1px; color:var(--text3); margin-bottom:10px; }
+.frow { display:flex; justify-content:space-between; align-items:center; padding:clamp(4px,0.5vw,7px) 0; border-bottom:0.5px solid var(--border); font-size:clamp(11px,1.05vw,15px); }
+.frow:last-child { border-bottom:none; }
+.fkey { color:var(--text2); }
+.fval { font-weight:500; }
+.fval.o { color:var(--orange); }
+.fbar-wrap { margin-bottom:7px; }
+.fbar-h { display:flex; justify-content:space-between; font-size:clamp(11px,1vw,14px); margin-bottom:3px; color:var(--text2); }
+.fbar-bg { height:3px; background:var(--border); border-radius:2px; }
+.fbar-f { height:100%; border-radius:2px; }
+
+/* ─────────────────────────────
+   S11 SCALE
+───────────────────────────── */
+.scgrid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:clamp(14px,1.6vw,22px); }
+.scyear { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(14px,1.5vw,22px); }
+.scylabel { font-size:clamp(8px,0.75vw,11px); letter-spacing:1px; color:var(--orange); margin-bottom:10px; }
+.scmrr { font-family:'Playfair Display',serif; font-size:clamp(24px,2.8vw,38px); font-weight:700; margin-bottom:2px; }
+.scsub { font-size:clamp(10px,0.95vw,14px); color:var(--text3); margin-bottom:10px; }
+.scitem { font-size:clamp(11px,1.05vw,15px); color:var(--text2); padding:clamp(4px,0.5vw,7px) 0; border-bottom:0.5px solid var(--border); display:flex; gap:7px; }
+.scitem:last-child { border-bottom:none; }
+.scitem::before { content:'→'; color:var(--orange); flex-shrink:0; }
+
+/* ─────────────────────────────
+   S12 TRACTION
+───────────────────────────── */
+.tbig { display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; background:var(--border); border-radius:8px; overflow:hidden; margin-top:clamp(12px,1.4vw,20px); margin-bottom:clamp(8px,1vw,14px); }
+.tbox { background:var(--bg2); padding:clamp(16px,1.8vw,28px); text-align:center; }
+.tnum { font-family:'Playfair Display',serif; font-size:clamp(36px,5vw,60px); font-weight:700; color:var(--orange); margin-bottom:6px; line-height:1; }
+.tdesc { font-size:clamp(13px,1.3vw,17px); font-weight:500; margin-bottom:2px; }
+.tsub { font-size:clamp(10px,0.9vw,13px); color:var(--text3); }
+.tcols { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.tcol { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(12px,1.3vw,18px); }
+.tclabel { font-size:clamp(8px,0.75vw,11px); letter-spacing:1px; color:var(--text3); margin-bottom:10px; }
+.tpoint { display:flex; gap:7px; font-size:clamp(11px,1.05vw,15px); color:var(--text2); padding:clamp(4px,0.5vw,7px) 0; border-bottom:0.5px solid var(--border); }
+.tpoint:last-child { border-bottom:none; }
+.tpoint::before { content:'—'; color:var(--orange); flex-shrink:0; }
+.tclosing { border:0.5px solid var(--border); border-left:2px solid var(--orange); border-radius:0 8px 8px 0; padding:clamp(9px,1vw,14px) 15px; font-size:clamp(12px,1.1vw,16px); color:var(--text2); }
+.tclosing span { color:var(--text); }
+
+/* ─────────────────────────────
+   S13 CONTACTS
+───────────────────────────── */
+#s13 { align-items:center; text-align:center; }
+.ctitle { font-family:'Playfair Display',serif; font-size:clamp(28px,3.8vw,54px); font-weight:500; max-width:580px; line-height:1.2; margin-bottom:clamp(20px,2.5vw,36px); }
+.ccards { display:grid; grid-template-columns:1fr 1fr; gap:10px; width:100%; max-width:520px; }
+.ccard { background:var(--bg3); border:0.5px solid var(--border); border-radius:8px; padding:clamp(14px,1.5vw,22px); text-align:left; }
+.cavatar { width:36px; height:36px; border-radius:50%; background:var(--bg2); border:1.5px solid var(--orange); display:flex; align-items:center; justify-content:center; font-size:clamp(11px,1vw,14px); font-weight:500; color:var(--orange); margin-bottom:10px; }
+.cname { font-size:clamp(14px,1.4vw,20px); font-weight:500; margin-bottom:2px; }
+.crole { font-size:clamp(8px,0.75vw,11px); letter-spacing:1px; color:var(--orange); margin-bottom:10px; }
+.cemail { font-size:clamp(12px,1.1vw,16px); color:var(--orange); margin-bottom:3px; }
+.cli { font-size:clamp(10px,0.95vw,14px); color:var(--text3); word-break:break-all; }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">Team<span>Sight</span></div>
+  <div class="nav-counter" id="nav-counter">1 / 13</div>
+</nav>
+
+<div id="deck">
+
+<!-- S1 -->
+<section class="slide active" id="s1">
+  <div class="title-logo">Team<span>Sight</span></div>
+  <div class="title-tagline">AI-платформа, которая предсказывает выгорание удалённых сотрудников за 2–4 недели до того, как это случится.</div>
+  <div class="title-tags">
+    <span class="tag">B2B SaaS</span><span class="tag">Искусственный интеллект</span>
+    <span class="tag">HR Tech</span><span class="tag">Удалённая работа</span>
+  </div>
+  <div class="title-metrics">
+    <div class="mbox"><div class="mnum" style="color:var(--orange)">$180B+</div><div class="mlabel">Размер рынка</div></div>
+    <div class="mbox"><div class="mnum">48%</div><div class="mlabel">Работают удалённо</div></div>
+    <div class="mbox"><div class="mnum">MVP</div><div class="mlabel">В разработке</div></div>
+  </div>
+  <div class="founders">Natan L. &nbsp;·&nbsp; <span>Amirkhan A.</span></div>
+</section>
+
+<!-- S2 -->
+<section class="slide" id="s2">
+  <div class="sl">Проблема</div>
+  <h2>Менеджеры узнают о проблеме слишком поздно</h2>
+  <div style="margin-top:16px;flex:1;display:flex;flex-direction:column;justify-content:center;">
+    <div class="pstat">
+      <div class="pnum">86%</div>
+      <div class="pdesc"><h3>Удалённых сотрудников испытывают выгорание</h3><p>Удалённая работа скрывает тревожные сигналы. К тому моменту, когда менеджер замечает проблему — сотрудник уже мысленно ушёл.</p></div>
+    </div>
+    <div class="pstat">
+      <div class="pnum">$8.8T</div>
+      <div class="pdesc"><h3>Ежегодные потери мировой экономики</h3><p>Один выгоревший сотрудник обходится компании в $2,000–10,000 в год потерянной продуктивности.</p></div>
+    </div>
+    <div class="pstat">
+      <div class="pnum">75%</div>
+      <div class="pdesc"><h3>Удалённых команд работают вслепую</h3><p>Без инструментов мониторинга состояния сотрудников. Менеджеры полагаются на интуицию.</p></div>
+    </div>
+  </div>
+  <div class="pclosing">«Проблема не в том, что выгорание случается. Проблема — в том, что его никто не видит заранее.»</div>
+</section>
+
+<!-- S3 -->
+<section class="slide" id="s3">
+  <div class="sl">Решение</div>
+  <h2>TeamSight предсказывает выгорание до того, как оно случилось</h2>
+  <p class="sub">Первая AI-платформа с предупреждением за 2–4 недели и конкретным планом действий для менеджера.</p>
+  <div class="fgrid">
+    <div class="feat"><span class="ftag">АНАЛИТИКА В РЕАЛЬНОМ ВРЕМЕНИ</span><h4>Мониторинг без слежки</h4><p>Отслеживает активность в рабочих приложениях — без скриншотов, без личных данных.</p></div>
+    <div class="feat"><span class="ftag">AI ПРЕДСКАЗЫВАЕТ ВЫГОРАНИЕ</span><h4>Точность 90%</h4><p>Предупреждает за 2–3 недели до кризиса, пока ещё есть время действовать.</p></div>
+    <div class="feat"><span class="ftag o">ПРИВАТНОСТЬ ПРЕЖДЕ ВСЕГО</span><h4>Только рабочие данные</h4><p>Никаких скриншотов, никаких сообщений. GDPR-совместимость по умолчанию.</p></div>
+    <div class="feat"><span class="ftag o">AI РЕКОМЕНДАЦИИ</span><h4>Не просто данные — действия</h4><p>Говорит менеджеру точно что делать прямо сейчас, чтобы команда работала эффективно.</p></div>
+  </div>
+  <div class="bottom-bar">Результат: <span style="color:var(--text)">снижение текучести на 43% · экономия $2,000–10,000 на сотрудника · рост продуктивности на 20–30%</span></div>
+</section>
+
+<!-- S4 -->
+<section class="slide" id="s4">
+  <div class="sl">Рынок</div>
+  <h2>Огромный рынок в идеальный момент</h2>
+  <div class="tam-row">
+    <div class="tambox"><div class="tamlabel">TAM</div><div class="tamnum o">$180B+</div><div class="tamdesc">Remote Workplace Services + AI в HR</div></div>
+    <div class="tambox"><div class="tamlabel">SAM</div><div class="tamnum">$15B</div><div class="tamdesc">HR Analytics + Employee Engagement</div></div>
+    <div class="tambox"><div class="tamlabel">SOM · 3 года</div><div class="tamnum">$150M</div><div class="tamdesc">США, Европа, СНГ · IT и digital-агентства</div></div>
+  </div>
+  <div class="tgrid">
+    <div class="tcard"><div class="ttitle">УДАЛЁННАЯ РАБОТА</div>
+      <div class="trow"><span class="tkey">Мировая рабочая сила</span><span class="tval o">48%</span></div>
+      <div class="trow"><span class="tkey">Цифровых рабочих мест к 2030</span><span class="tval">90 млн</span></div>
+      <div class="trow"><span class="tkey">CAGR рынка</span><span class="tval o">23.1%</span></div>
+    </div>
+    <div class="tcard"><div class="ttitle">AI В HR</div>
+      <div class="trow"><span class="tkey">Текущее внедрение</span><span class="tval o">43%</span></div>
+      <div class="trow"><span class="tkey">Ежегодный рост</span><span class="tval">65%</span></div>
+      <div class="trow"><span class="tkey">CAGR рынка</span><span class="tval o">15.94%</span></div>
+    </div>
+    <div class="tcard"><div class="ttitle">КРИЗИС ВЫГОРАНИЯ</div>
+      <div class="trow"><span class="tkey">Удалённых сотрудников</span><span class="tval o">86%</span></div>
+      <div class="trow"><span class="tkey">Глобальные потери</span><span class="tval">$8.8T</span></div>
+      <div class="trow"><span class="tkey">Команды без инструментов</span><span class="tval o">75%</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- S5 -->
+<section class="slide" id="s5">
+  <div class="sl">Бизнес-модель</div>
+  <h2>Простая, масштабируемая, рекуррентная выручка</h2>
+  <div class="pgrid">
+    <div class="plan">
+      <div class="pname">STARTER</div>
+      <div class="pprice">$10<span style="font-size:13px;color:var(--text3);">/user/мес</span></div>
+      <div class="pusers">до 50 сотрудников</div>
+      <ul class="plist"><li>Дашборд аналитики в реальном времени</li><li>Базовая аналитика активности</li><li>Email отчёты</li><li>14-дневный бесплатный период</li></ul>
+    </div>
+    <div class="plan pop">
+      <div class="pbadge">★ ПОПУЛЯРНЫЙ</div>
+      <div class="pname">GROWTH</div>
+      <div class="pprice">$15<span style="font-size:13px;color:var(--text3);">/user/мес</span></div>
+      <div class="pusers">50–200 сотрудников</div>
+      <ul class="plist"><li>Всё из Starter</li><li>AI предсказание выгорания</li><li>AI рекомендации для менеджеров</li><li>Интеграция Slack / Teams</li></ul>
+    </div>
+    <div class="plan">
+      <div class="pname">ENTERPRISE</div>
+      <div class="pprice" style="font-size:24px;">Custom</div>
+      <div class="pusers">200+ сотрудников</div>
+      <ul class="plist"><li>Всё из Growth</li><li>SSO / SAML</li><li>GDPR / HIPAA</li><li>Персональный менеджер</li></ul>
+    </div>
+  </div>
+  <div class="ugrid">
+    <div class="ubox"><div class="ulabel">CAC</div><div class="uval">$200–500</div></div>
+    <div class="ubox"><div class="ulabel">LTV</div><div class="uval">$5–15K</div></div>
+    <div class="ubox"><div class="ulabel">LTV:CAC</div><div class="uval o">10–30x</div></div>
+    <div class="ubox"><div class="ulabel">Gross Margin</div><div class="uval o">80%+</div></div>
+    <div class="ubox"><div class="ulabel">Окупаемость</div><div class="uval">1–3 мес</div></div>
+  </div>
+</section>
+
+<!-- S6 COMPETITORS -->
+<section class="slide" id="s6">
+  <div class="sl">Конкуренты</div>
+  <h2>Рынок большой — но никто не делает то, что делаем мы</h2>
+  <div style="margin-top:14px;display:flex;flex-direction:column;align-items:center;gap:4px;flex:1;min-height:0;">
+    <div style="font-size:11px;color:var(--text3);letter-spacing:1px;">ДОСТУПНЫЙ ↑</div>
+    <div style="display:flex;align-items:center;gap:6px;width:100%;max-width:700px;flex:1;min-height:0;">
+      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:11px;color:var(--text3);letter-spacing:1px;flex-shrink:0;">← РЕАКТИВНЫЙ</div>
+      <svg viewBox="0 0 600 380" xmlns="http://www.w3.org/2000/svg" style="flex:1;max-height:380px;display:block;" preserveAspectRatio="xMidYMid meet">
+        <!-- Quadrant backgrounds -->
+        <rect x="2" y="2" width="295" height="187" rx="6" fill="#161616"/>
+        <rect x="303" y="2" width="295" height="187" rx="6" fill="#161616"/>
+        <rect x="2" y="193" width="295" height="185" rx="6" fill="#161616"/>
+        <rect x="303" y="193" width="295" height="185" rx="6" fill="#161616"/>
+        <!-- Axis lines -->
+        <line x1="300" y1="0" x2="300" y2="380" stroke="#363636" stroke-width="1.5"/>
+        <line x1="0" y1="190" x2="600" y2="190" stroke="#363636" stroke-width="1.5"/>
+        <!-- Arrow heads -->
+        <polygon points="596,186 596,194 606,190" fill="#444"/>
+        <polygon points="4,186 4,194 -6,190" fill="#444"/>
+        <polygon points="296,4 304,4 300,-6" fill="#444"/>
+        <polygon points="296,376 304,376 300,386" fill="#444"/>
+        <!-- X axis labels -->
+        <text x="16" y="186" font-size="11" fill="#555" font-family="DM Sans,sans-serif">Реактивный</text>
+        <text x="584" y="186" text-anchor="end" font-size="11" fill="#555" font-family="DM Sans,sans-serif">Предиктивный</text>
+
+        <!-- 15Five: top-left (reactive + affordable) -->
+        <rect x="30" y="30" width="76" height="28" rx="5" fill="#1e1e1e" stroke="#363636" stroke-width="0.8"/>
+        <text x="68" y="48" text-anchor="middle" font-size="13" fill="#cccccc" font-family="DM Sans,sans-serif">15Five</text>
+
+        <!-- Culture Amp: top-left lower -->
+        <rect x="50" y="80" width="96" height="28" rx="5" fill="#1e1e1e" stroke="#363636" stroke-width="0.8"/>
+        <text x="98" y="98" text-anchor="middle" font-size="13" fill="#cccccc" font-family="DM Sans,sans-serif">Culture Amp</text>
+
+        <!-- Lattice: bottom-left -->
+        <rect x="40" y="218" width="70" height="28" rx="5" fill="#1e1e1e" stroke="#363636" stroke-width="0.8"/>
+        <text x="75" y="236" text-anchor="middle" font-size="13" fill="#cccccc" font-family="DM Sans,sans-serif">Lattice</text>
+
+        <!-- Leapsome: bottom-left lower -->
+        <rect x="60" y="268" width="84" height="28" rx="5" fill="#1e1e1e" stroke="#363636" stroke-width="0.8"/>
+        <text x="102" y="286" text-anchor="middle" font-size="13" fill="#cccccc" font-family="DM Sans,sans-serif">Leapsome</text>
+
+        <!-- SAP: bottom-right -->
+        <rect x="330" y="295" width="50" height="28" rx="5" fill="#1e1e1e" stroke="#363636" stroke-width="0.8"/>
+        <text x="355" y="313" text-anchor="middle" font-size="13" fill="#cccccc" font-family="DM Sans,sans-serif">SAP</text>
+
+        <!-- Workday: bottom-right -->
+        <rect x="430" y="318" width="80" height="28" rx="5" fill="#1e1e1e" stroke="#363636" stroke-width="0.8"/>
+        <text x="470" y="336" text-anchor="middle" font-size="13" fill="#cccccc" font-family="DM Sans,sans-serif">Workday</text>
+
+        <!-- TeamSight: TOP RIGHT — predictive + affordable -->
+        <rect x="400" y="18" width="120" height="38" rx="8" fill="#E8650A"/>
+        <text x="460" y="41" text-anchor="middle" font-size="16" fill="white" font-weight="500" font-family="DM Sans,sans-serif">TeamSight</text>
+      </svg>
+      <div style="writing-mode:vertical-rl;font-size:11px;color:var(--text3);letter-spacing:1px;flex-shrink:0;">ПРЕДИКТИВНЫЙ →</div>
+    </div>
+    <div style="font-size:11px;color:var(--text3);letter-spacing:1px;">↓ ДОРОГОЙ</div>
+    <div class="comp-note">← Этот квадрант принадлежит нам. Предиктивный + Доступный для SMB.</div>
+  </div>
+</section>
+
+<!-- S7 -->
+<section class="slide" id="s7">
+  <div class="sl">Конкурентные преимущества</div>
+  <h2>Почему TeamSight побеждает</h2>
+  <div class="agrid">
+    <div class="adv"><span class="abadge f">ПРЕДИКТИВНЫЙ AI</span><p>Предупреждаем менеджеров за 2–4 недели до выгорания — не после. Ни один конкурент этого не делает.</p></div>
+    <div class="adv"><span class="abadge o">REMOTE-FIRST</span><p>Создан с нуля для удалённых команд — не офисный инструмент, адаптированный под удалёнку.</p></div>
+    <div class="adv"><span class="abadge f">ТОЧНОСТЬ 90%</span><p>AI-модель на поведенческих паттернах: стресс, сон, нагрузка, поддержка команды.</p></div>
+    <div class="adv"><span class="abadge o">ПРИВАТНОСТЬ</span><p>Никакой слежки за экраном. Анонимные самооценки. GDPR из коробки.</p></div>
+    <div class="adv"><span class="abadge f">ДЕЙСТВИЯ, НЕ ДАННЫЕ</span><p>Менеджер получает конкретные шаги — не просто красивые графики.</p></div>
+    <div class="adv"><span class="abadge o">ДОСТУПНО ДЛЯ SMB</span><p>От $10/user/мес. Запуск за минуты, без 6-месячного внедрения.</p></div>
+    <div class="adv-full">
+      <span class="adv-full-badge">ЗАЩИТА ОТ ФАЛЬСИФИКАЦИИ</span>
+      <div class="adv-full-col"><h4>Поведенческие вопросы</h4><p>Спрашиваем факты, а не ощущения. «Сколько ночей спали меньше 6 часов?» сложнее подделать чем «оцените стресс 1–10».</p></div>
+      <div class="adv-full-col"><h4>Перекрёстная валидация</h4><p>Самооценка vs Slack, календарь, рабочие часы. Расхождения становятся сигналами.</p></div>
+      <div class="adv-full-col"><h4>Тренды важнее точек</h4><p>Один фальшивый ответ не влияет на модель. Поддерживать ложный паттерн 8 недель когнитивно невозможно.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- S8 -->
+<section class="slide" id="s8">
+  <div class="sl">Go-to-Market</div>
+  <h2>Как мы достигаем $500K ARR</h2>
+  <p class="sub">Три параллельных трека. Сначала основатель, затем продукт, затем партнёры.</p>
+  <div class="g3" style="margin-top:14px;margin-bottom:10px;">
+    <div class="gtrack">
+      <div class="ghead"><span class="gbadge" style="background:var(--orange);">ТРЕК 1</span><span class="gphase">Месяцы 1–3</span></div>
+      <div class="gtitle">Продажи основателя</div>
+      <div class="gitem">LinkedIn outreach: 50 CEO в неделю, удалённые компании 10–50 чел.</div>
+      <div class="gitem">Бесплатный калькулятор выгорания как инструмент лидогенерации</div>
+      <div class="gitem">5 design-партнёров по сниженной цене для валидации</div>
+      <div class="gtarget"><span class="gtarget-l">ЦЕЛЬ</span><span style="font-weight:500;color:var(--orange);">$5K MRR</span></div>
+    </div>
+    <div class="gtrack">
+      <div class="ghead"><span class="gbadge" style="background:var(--orange-dim);">ТРЕК 2</span><span class="gphase">Месяцы 4–6</span></div>
+      <div class="gtitle">Product-led growth</div>
+      <div class="gitem">SEO-контент вокруг выгорания удалённых команд</div>
+      <div class="gitem">14-дневный бесплатный период без кредитной карты</div>
+      <div class="gitem">Гостевые выступления в HR и remote work подкастах</div>
+      <div class="gtarget"><span class="gtarget-l">ЦЕЛЬ</span><span style="font-weight:500;color:var(--orange-dim);">$15K MRR</span></div>
+    </div>
+    <div class="gtrack">
+      <div class="ghead"><span class="gbadge" style="background:#5a3004;">ТРЕК 3</span><span class="gphase">Месяцы 7–12</span></div>
+      <div class="gtitle">Партнёрства</div>
+      <div class="gitem">Реферальная программа — 20% клиентов приводят 1–2 лида</div>
+      <div class="gitem">Листинг в маркетплейсах Slack, Notion, Asana, Jira</div>
+      <div class="gitem">Microsoft Teams AppSource — 320M пользователей</div>
+      <div class="gtarget"><span class="gtarget-l">ЦЕЛЬ</span><span style="font-weight:500;color:#c07030;">$50K MRR</span></div>
+    </div>
+  </div>
+  <div class="gpartners">
+    <span class="gplabel">ИНТЕГРАЦИИ</span>
+    <span class="gchip">Slack</span><span class="gchip">Microsoft Teams</span>
+    <span class="gchip">Notion</span><span class="gchip">Asana</span><span class="gchip">Jira</span>
+    <span style="margin-left:auto;font-size:10px;color:var(--text3);">Листинг → органика → снижение CAC</span>
+  </div>
+</section>
+
+<!-- S9 -->
+<section class="slide" id="s9">
+  <div class="sl">Технологии</div>
+  <h2>Не просто опрос — предиктивный движок</h2>
+  <div class="tlayers">
+    <div class="tlayer">
+      <div class="tlabel">СЛОЙ 1 · СБОР ДАННЫХ</div>
+      <div class="titem"><h5>Еженедельные самооценки</h5><p>10 поведенческих вопросов · анонимно · 5 минут</p></div>
+      <div class="titem"><h5>Поведенческие метаданные</h5><p>Паттерны активности · сигналы переработки</p></div>
+      <div class="titem"><h5>Перекрёстная валидация</h5><p>Самооценка vs объективные паттерны</p></div>
+    </div>
+    <div class="tlayer" style="border-left:0.5px solid var(--border);border-right:0.5px solid var(--border);">
+      <div class="tlabel">СЛОЙ 2 · AI ДВИЖОК</div>
+      <div class="titem"><h5>Индивидуальная baseline-модель</h5><p>Норма каждого человека — не средние по рынку</p></div>
+      <div class="titem"><h5>Модель предсказания выгорания</h5><p>Точность 90% · анализ 8-недельных паттернов</p></div>
+      <div class="titem"><h5>OpenAI API</h5><p>Персональные рекомендации для менеджеров</p></div>
+    </div>
+    <div class="tlayer">
+      <div class="tlabel">СЛОЙ 3 · РЕЗУЛЬТАТ</div>
+      <div class="titem"><h5>Дашборд менеджера</h5><p>Здоровье команды · алерты · план действий</p></div>
+      <div class="titem"><h5>Дашборд сотрудника</h5><p>Личный burnout-score · тренды · советы</p></div>
+      <div class="titem"><h5>Интеграции</h5><p>Slack · Jira · Asana · Microsoft Teams</p></div>
+    </div>
+  </div>
+  <div class="tstack" style="margin-bottom:9px;">
+    <div class="tchip"><div class="tchip-name">Next.js</div><div class="tchip-role">Frontend</div></div>
+    <div class="tchip"><div class="tchip-name">Supabase</div><div class="tchip-role">Backend + DB</div></div>
+    <div class="tchip"><div class="tchip-name">OpenAI API</div><div class="tchip-role">AI</div></div>
+    <div class="tchip"><div class="tchip-name">Python</div><div class="tchip-role">ML модели</div></div>
+    <div class="tchip"><div class="tchip-name">Vercel</div><div class="tchip-role">Деплой</div></div>
+    <div class="tchip"><div class="tchip-name">Stripe</div><div class="tchip-role">Платежи</div></div>
+  </div>
+  <div class="tmoat">Это не форма с опросом и дашборд сверху. <span>Это продольная система поведенческого интеллекта, которая становится точнее с каждой неделей данных.</span></div>
+</section>
+
+<!-- S10 -->
+<section class="slide" id="s10">
+  <div class="sl">Финансовая модель</div>
+  <h2>Путь к $500K ARR</h2>
+  <div class="fmilestones">
+    <div class="fmile"><div class="fmlabel">МЕСЯЦ 3</div><div class="fmnum">$5K</div><div class="fmdesc">MRR · первые клиенты</div></div>
+    <div class="fmile"><div class="fmlabel">МЕСЯЦ 6</div><div class="fmnum">$15K</div><div class="fmdesc">MRR · точка безубыточности</div></div>
+    <div class="fmile"><div class="fmlabel">МЕСЯЦ 12</div><div class="fmnum">$50K</div><div class="fmdesc">MRR · прибыльность</div></div>
+    <div class="fmile"><div class="fmlabel">ГОД 1 ARR</div><div class="fmnum">$500K</div><div class="fmdesc">целевой показатель</div></div>
+  </div>
+  <div class="fchart">
+    <div class="fclabel">РОСТ MRR · 12 МЕСЯЦЕВ</div>
+    <div class="bars">
+      <div class="bar" style="height:5%;background:#222;"></div>
+      <div class="bar" style="height:8%;background:#222;"></div>
+      <div class="bar" style="height:12%;background:var(--orange);opacity:0.55;"></div>
+      <div class="bar" style="height:18%;background:#222;"></div>
+      <div class="bar" style="height:26%;background:#222;"></div>
+      <div class="bar" style="height:36%;background:var(--orange);opacity:0.75;"></div>
+      <div class="bar" style="height:46%;background:#222;"></div>
+      <div class="bar" style="height:58%;background:#222;"></div>
+      <div class="bar" style="height:68%;background:#222;"></div>
+      <div class="bar" style="height:78%;background:#222;"></div>
+      <div class="bar" style="height:88%;background:#222;"></div>
+      <div class="bar" style="height:100%;background:var(--orange);"></div>
+    </div>
+  </div>
+  <div class="g2">
+    <div class="funit">
+      <div class="funit-label">UNIT ECONOMICS</div>
+      <div class="frow"><span class="fkey">CAC</span><span class="fval">$200–500</span></div>
+      <div class="frow"><span class="fkey">LTV</span><span class="fval">$5,000–15,000</span></div>
+      <div class="frow"><span class="fkey">LTV:CAC</span><span class="fval o">10–30x</span></div>
+      <div class="frow"><span class="fkey">Gross Margin</span><span class="fval o">80%+</span></div>
+      <div class="frow"><span class="fkey">Break-even</span><span class="fval">Месяц 6</span></div>
+    </div>
+    <div class="funit">
+      <div class="funit-label">ОПЕРАЦИОННЫЕ РАСХОДЫ · ГОД 1</div>
+      <div class="frow"><span class="fkey">Хостинг (Vercel/AWS)</span><span class="fval">$1,800/год</span></div>
+      <div class="frow"><span class="fkey">OpenAI API</span><span class="fval">$1,200/год</span></div>
+      <div class="frow"><span class="fkey">Supabase + инструменты</span><span class="fval">$600/год</span></div>
+      <div class="frow"><span class="fkey">Домен + SSL</span><span class="fval">$50/год</span></div>
+      <div class="frow"><span class="fkey">Маркетинг (до PMF)</span><span class="fval">$0</span></div>
+      <div class="frow"><span class="fkey" style="color:var(--text);font-weight:500;">Итого расходы</span><span class="fval o">~$3,650/год</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- S11 -->
+<section class="slide" id="s11">
+  <div class="sl">Масштабирование</div>
+  <h2>Большая картина</h2>
+  <p class="sub">От валидации продукта до глобальной HR-платформы нового поколения.</p>
+  <div class="scgrid">
+    <div class="scyear">
+      <div class="scylabel">ГОД 1 · ВАЛИДАЦИЯ</div>
+      <div class="scmrr">$50K MRR</div>
+      <div class="scsub">50–100 клиентов · США / Европа / СНГ</div>
+      <div class="scitem">Product-market fit доказан</div>
+      <div class="scitem">Платформа полностью запущена</div>
+      <div class="scitem">Первые кейсы и отзывы клиентов</div>
+      <div class="scitem">Seed раунд закрыт · команда растёт</div>
+    </div>
+    <div class="scyear" style="border-color:var(--orange);">
+      <div class="scylabel">ГОД 2 · РОСТ</div>
+      <div class="scmrr" style="color:var(--orange);">$200K MRR</div>
+      <div class="scsub">300–500 клиентов · Series A</div>
+      <div class="scitem">Полная интеграция Slack, Teams, Jira</div>
+      <div class="scitem">HR-консультанты как канал продаж</div>
+      <div class="scitem">Найм: SDR + Customer Success</div>
+      <div class="scitem">Расширение на Европу (GDPR-ready)</div>
+    </div>
+    <div class="scyear">
+      <div class="scylabel">ГОД 3 · МАСШТАБ</div>
+      <div class="scmrr">$500K+ MRR</div>
+      <div class="scsub">1,000+ клиентов · глобально</div>
+      <div class="scitem">Enterprise-сегмент 200+ сотрудников</div>
+      <div class="scitem">Выход на рынок APAC</div>
+      <div class="scitem">Предиктивная HR-платформа</div>
+      <div class="scitem">M&A интерес от крупных HR-игроков</div>
+    </div>
+  </div>
+  <div class="g3" style="margin-top:12px;">
+    <div class="card" style="text-align:center;"><div class="card-label">ДОЛГОСРОЧНОЕ ВИДЕНИЕ</div><div style="font-size:12px;color:var(--text2);margin-top:6px;">Стать стандартом управления здоровьем удалённых команд — как Slack стал стандартом коммуникации</div></div>
+    <div class="card" style="text-align:center;"><div class="card-label">ПОТЕНЦИАЛ M&A</div><div style="font-size:12px;color:var(--text2);margin-top:6px;">Workday купил HiredScore за $400M. Рынок консолидируется — специализированные решения становятся целями поглощения</div></div>
+    <div class="card" style="text-align:center;"><div class="card-label">ВОЗВРАТ ДЛЯ ИНВЕСТОРОВ</div><div style="font-size:12px;color:var(--text2);margin-top:6px;">Потенциал <span style="color:var(--orange);font-weight:500;">10–20x</span> для seed-инвесторов при достижении Series A в 18–24 месяца</div></div>
+  </div>
+</section>
+
+<!-- S12 -->
+<section class="slide" id="s12">
+  <div class="sl">Трекшн и валидация</div>
+  <h2>Рынок уже отвечает</h2>
+  <p class="sub">До продукта. Без платной рекламы. Всё органически.</p>
+  <div class="tbig">
+    <div class="tbox"><div class="tnum">1,000+</div><div class="tdesc">Прохождений калькулятора выгорания</div><div class="tsub">+ подписки на рассылку · только органика</div></div>
+    <div class="tbox"><div class="tnum">6</div><div class="tdesc">Потенциальных клиентов в pipeline</div><div class="tsub">cold email и звонки · реальные разговоры</div></div>
+    <div class="tbox"><div class="tnum">600+</div><div class="tdesc">Сотрудников в pipeline</div><div class="tsub">суммарный штат вовлечённых компаний</div></div>
+  </div>
+  <div class="tcols" style="margin-bottom:10px;">
+    <div class="tcol">
+      <div class="tclabel">ЧТО ДОКАЗАЛ КАЛЬКУЛЯТОР</div>
+      <div class="tpoint">Люди активно ищут инструменты оценки выгорания — спрос органический и реальный</div>
+      <div class="tpoint">Высокий процент подписок подтверждает интерес к продукту</div>
+      <div class="tpoint">Доказана воронка: бесплатный инструмент конвертирует в тёплую аудиторию</div>
+    </div>
+    <div class="tcol">
+      <div class="tclabel">ЧТО ДОКАЗАЛИ ИНТЕРВЬЮ</div>
+      <div class="tpoint">CEO подтвердили: выгорание — реальная проблема в удалённых командах</div>
+      <div class="tpoint">Cold outreach сработал — 6 компаний согласились без готового продукта</div>
+      <div class="tpoint">Pipeline 600+ сотрудников готов к онбордингу после запуска MVP</div>
+    </div>
+  </div>
+  <div class="tclosing">Это не идея. Это валидированная проблема с тёплым pipeline — <span>до единого доллара инвестиций.</span></div>
+</section>
+
+<!-- S13 -->
+<section class="slide" id="s13">
+  <div class="sl" style="text-align:center;">Контакты</div>
+  <div class="ctitle">Делаем удалённую работу здоровой — для каждого сотрудника.</div>
+  <div style="height:20px;"></div>
+  <div class="ccards">
+    <div class="ccard">
+      <div class="cavatar">NL</div>
+      <div class="cname">Natan Litvinov</div>
+      <div class="crole">CO-FOUNDER · LEAD DEVELOPER</div>
+      <div class="cemail">litvinovnatan@gmail.com</div>
+      <div class="cli">linkedin.com/in/natan-litvinov-4ab45437a</div>
+    </div>
+    <div class="ccard">
+      <div class="cavatar">AA</div>
+      <div class="cname">Amirkhan Argymbekov</div>
+      <div class="crole">CO-FOUNDER · DEVELOPER & DESIGN</div>
+      <div class="cemail">amirkhan@teamsight.app</div>
+      <div class="cli">linkedin.com/in/amirkhan</div>
+    </div>
+  </div>
+</section>
+
+</div><!-- /deck -->
+
+<div class="controls">
+  <button class="arrow-btn" id="btn-prev" onclick="go(-1)" disabled>←</button>
+  <div class="dots-wrap" id="dots"></div>
+  <button class="arrow-btn" id="btn-next" onclick="go(1)">→</button>
+</div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+const dotsWrap = document.getElementById('dots');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+const counter = document.getElementById('nav-counter');
+let cur = 0;
+
+slides.forEach((_,i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i===0?' active':'');
+  d.onclick = () => goTo(i);
+  dotsWrap.appendChild(d);
+});
+
+function goTo(idx) {
+  if (idx === cur || idx < 0 || idx >= slides.length) return;
+  slides[cur].classList.remove('active');
+  cur = idx;
+  slides[cur].classList.add('active');
+  const dots = dotsWrap.querySelectorAll('.dot');
+  dots.forEach((d,i) => d.classList.toggle('active', i===cur));
+  counter.textContent = (cur+1) + ' / ' + slides.length;
+  btnPrev.disabled = cur === 0;
+  btnNext.disabled = cur === slides.length - 1;
+}
+
+function go(dir) { goTo(cur + dir); }
+
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' ') { e.preventDefault(); go(1); }
+  if (e.key==='ArrowLeft'||e.key==='ArrowUp') { e.preventDefault(); go(-1); }
+});
+
+let tx=0, ty=0;
+document.addEventListener('touchstart', e => { tx=e.touches[0].clientX; ty=e.touches[0].clientY; }, {passive:true});
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  const dy = e.changedTouches[0].clientY - ty;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) go(dx<0?1:-1);
+}, {passive:true});
+</script>
+</body>
+</html>
