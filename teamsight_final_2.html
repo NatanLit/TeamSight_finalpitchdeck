@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>TeamSight — Питч Дек</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,700;1,400;1,700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --orange: #E8650A;
+  --orange-dim: #b84f08;
+  --bg: #0d0d0d;
+  --bg2: #141414;
+  --bg3: #1c1c1c;
+  --border: #282828;
+  --border2: #363636;
+  --text: #ffffff;
+  --text2: #cccccc;
+  --text3: #888888;
+}
+html, body { width:100%; height:100%; overflow:hidden; background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; }
+
+.nav {
+  position:fixed; top:0; left:0; right:0; z-index:200;
+  height:48px; background:rgba(13,13,13,0.97);
+  border-bottom:0.5px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; padding:0 40px;
+}
+.nav-logo { font-family:'Playfair Display',serif; font-size:17px; }
+.nav-logo span { color:var(--orange); font-style:italic; }
+.nav-counter { font-size:13px; color:var(--text3); }
+
+.controls {
+  position:fixed; bottom:0; left:0; right:0; z-index:200;
+  height:48px; background:rgba(13,13,13,0.97);
+  border-top:0.5px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between; padding:0 40px; gap:16px;
+}
+.dots-wrap { display:flex; gap:6px; flex-wrap:wrap; justify-content:center; flex:1; }
+.dot { width:7px; height:7px; border-radius:50%; background:var(--border2); cursor:pointer; transition:background 0.15s; flex-shrink:0; }
+.dot.active { background:var(--orange); transform:scale(1.3); }
+.arrow-btn { background:none; border:0.5px solid var(--border2); border-radius:6px; color:var(--text2); font-size:18px; cursor:pointer; padding:4px 16px; transition:border-color 0.15s,color 0.15s; flex-shrink:0; }
+.arrow-btn:hover { border-color:var(--orange); color:var(--orange); }
+.arrow-btn:disabled { opacity:0.2; cursor:default; }
+
+#deck { position:fixed; top:48px; left:0; right:0; bottom:48px; overflow:hidden; }
+
+.slide {
+  position:absolute; inset:0;
+  display:none; flex-direction:column; justify-content:center;
+  padding:clamp(24px,3vw,48px) clamp(48px,6vw,100px);
+  overflow:hidden;
+}
+.slide.active { display:flex; }
+
+/* TYPOGRAPHY — все читается с 5 метров */
+.sl { font-size:clamp(11px,1vw,14px); letter-spacing:3px; color:var(--orange); text-transform:uppercase; margin-bottom:clamp(12px,1.5vw,20px); flex-shrink:0; }
+h2 { font-family:'Playfair Display',serif; font-size:clamp(32px,4vw,60px); font-weight:500; line-height:1.1; flex-shrink:0; }
+.body-text { font-size:clamp(16px,1.8vw,26px); color:var(--text2); line-height:1.6; margin-top:clamp(12px,1.5vw,20px); flex-shrink:0; }
+.big-num { font-family:'Playfair Display',serif; font-size:clamp(48px,7vw,100px); font-weight:700; color:var(--orange); line-height:1; }
+.big-label { font-size:clamp(14px,1.6vw,22px); color:var(--text2); margin-top:8px; }
+
+/* CARDS */
+.card { background:var(--bg3); border:0.5px solid var(--border); border-radius:10px; padding:clamp(16px,2vw,28px); }
+.card-label { font-size:clamp(10px,0.9vw,13px); letter-spacing:2px; color:var(--text3); text-transform:uppercase; margin-bottom:10px; }
+.card-num { font-family:'Playfair Display',serif; font-size:clamp(28px,3.5vw,52px); font-weight:700; margin-bottom:6px; }
+.card-text { font-size:clamp(13px,1.3vw,18px); color:var(--text2); line-height:1.5; }
+
+.g2 { display:grid; grid-template-columns:1fr 1fr; gap:clamp(10px,1.5vw,20px); }
+.g3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:clamp(10px,1.5vw,20px); }
+.g4 { display:grid; grid-template-columns:repeat(4,1fr); gap:clamp(8px,1.2vw,16px); }
+
+/* DIVIDER */
+.divider { height:0.5px; background:var(--border); margin:clamp(12px,1.5vw,20px) 0; flex-shrink:0; }
+
+/* BOTTOM BAR */
+.bottom-bar { padding:clamp(12px,1.4vw,20px) clamp(16px,2vw,28px); background:var(--bg3); border:0.5px solid var(--border); border-left:3px solid var(--orange); border-radius:0 10px 10px 0; font-size:clamp(14px,1.5vw,20px); color:var(--text2); flex-shrink:0; }
+
+/* ROW ITEM */
+.row-item { display:flex; align-items:flex-start; gap:clamp(16px,2vw,28px); padding:clamp(10px,1.2vw,18px) 0; border-bottom:0.5px solid var(--border); }
+.row-item:last-child { border-bottom:none; }
+.row-num { font-family:'Playfair Display',serif; font-size:clamp(32px,4.5vw,64px); font-weight:700; color:var(--orange); line-height:1; flex-shrink:0; min-width:clamp(120px,14vw,200px); }
+.row-body h3 { font-size:clamp(16px,1.8vw,26px); font-weight:500; margin-bottom:6px; }
+.row-body p { font-size:clamp(13px,1.4vw,20px); color:var(--text2); line-height:1.5; }
+
+/* BADGE */
+.badge { display:inline-block; font-size:clamp(10px,0.9vw,13px); font-weight:500; letter-spacing:1px; padding:5px 12px; border-radius:5px; margin-bottom:10px; }
+.badge.f { background:var(--orange); color:#fff; }
+.badge.o { border:0.5px solid var(--orange); color:var(--orange); }
+
+/* LIST */
+.list-item { display:flex; gap:10px; font-size:clamp(14px,1.5vw,20px); color:var(--text2); padding:clamp(6px,0.8vw,12px) 0; border-bottom:0.5px solid var(--border); }
+.list-item:last-child { border-bottom:none; }
+.list-item::before { content:'—'; color:var(--orange); flex-shrink:0; }
+
+/* TECH LAYER */
+.tlayers { display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; background:var(--border); border-radius:10px; overflow:hidden; }
+.tlayer { background:var(--bg3); padding:clamp(16px,2vw,28px); }
+.tlayer-label { font-size:clamp(10px,0.9vw,13px); letter-spacing:1px; color:var(--orange); margin-bottom:clamp(12px,1.5vw,20px); }
+.titem { background:var(--bg2); border:0.5px solid var(--border); border-radius:6px; padding:clamp(10px,1.2vw,16px); margin-bottom:clamp(6px,0.8vw,10px); }
+.titem h5 { font-size:clamp(14px,1.4vw,20px); font-weight:500; margin-bottom:4px; }
+.titem p { font-size:clamp(12px,1.1vw,16px); color:var(--text3); }
+
+/* TRACTION BIG */
+.tbig { display:grid; grid-template-columns:1fr 1fr 1fr; gap:2px; background:var(--border); border-radius:10px; overflow:hidden; }
+.tbox { background:var(--bg2); padding:clamp(20px,3vw,40px); text-align:center; }
+.tbox-num { font-family:'Playfair Display',serif; font-size:clamp(40px,6vw,80px); font-weight:700; color:var(--orange); line-height:1; margin-bottom:10px; }
+.tbox-desc { font-size:clamp(14px,1.5vw,20px); font-weight:500; margin-bottom:4px; }
+.tbox-sub { font-size:clamp(12px,1.1vw,16px); color:var(--text3); }
+
+/* COMP CHART */
+.comp-note { font-size:clamp(13px,1.3vw,18px); color:var(--orange); margin-top:12px; text-align:center; flex-shrink:0; }
+
+/* CONTACTS */
+#s13 { align-items:center; text-align:center; }
+.ctitle { font-family:'Playfair Display',serif; font-size:clamp(32px,4.5vw,64px); font-weight:500; max-width:700px; line-height:1.2; margin-bottom:clamp(24px,3vw,40px); }
+.ccards { display:grid; grid-template-columns:1fr 1fr; gap:clamp(12px,1.5vw,20px); width:100%; max-width:600px; }
+.ccard { background:var(--bg3); border:0.5px solid var(--border); border-radius:10px; padding:clamp(16px,2vw,28px); text-align:left; }
+.cavatar { width:44px; height:44px; border-radius:50%; background:var(--bg2); border:2px solid var(--orange); display:flex; align-items:center; justify-content:center; font-size:clamp(13px,1.2vw,16px); font-weight:500; color:var(--orange); margin-bottom:12px; }
+.cname { font-size:clamp(16px,1.8vw,24px); font-weight:500; margin-bottom:4px; }
+.crole { font-size:clamp(10px,0.9vw,13px); letter-spacing:1px; color:var(--orange); margin-bottom:12px; }
+.cemail { font-size:clamp(13px,1.3vw,18px); color:var(--orange); margin-bottom:4px; }
+.cli { font-size:clamp(11px,1.1vw,15px); color:var(--text3); word-break:break-all; }
+
+/* SCALE */
+.scgrid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:clamp(10px,1.5vw,20px); }
+.scyear { background:var(--bg3); border:0.5px solid var(--border); border-radius:10px; padding:clamp(16px,2vw,28px); }
+.scylabel { font-size:clamp(10px,0.9vw,13px); letter-spacing:1px; color:var(--orange); margin-bottom:12px; }
+.scmrr { font-family:'Playfair Display',serif; font-size:clamp(28px,3.5vw,48px); font-weight:700; margin-bottom:4px; }
+.scsub { font-size:clamp(12px,1.2vw,16px); color:var(--text3); margin-bottom:12px; }
+.scitem { font-size:clamp(13px,1.3vw,18px); color:var(--text2); padding:clamp(5px,0.6vw,9px) 0; border-bottom:0.5px solid var(--border); display:flex; gap:8px; }
+.scitem:last-child { border-bottom:none; }
+.scitem::before { content:'→'; color:var(--orange); flex-shrink:0; }
+
+/* FIN */
+.fmilestones { display:grid; grid-template-columns:repeat(4,1fr); gap:2px; background:var(--border); border-radius:10px; overflow:hidden; }
+.fmile { background:var(--bg2); padding:clamp(16px,2vw,28px); text-align:center; }
+.fmlabel { font-size:clamp(10px,0.9vw,13px); letter-spacing:1px; color:var(--text3); margin-bottom:8px; }
+.fmnum { font-family:'Playfair Display',serif; font-size:clamp(26px,3.2vw,44px); font-weight:700; color:var(--orange); margin-bottom:4px; }
+.fmdesc { font-size:clamp(12px,1.2vw,16px); color:var(--text3); }
+.frow { display:flex; justify-content:space-between; align-items:center; padding:clamp(6px,0.8vw,12px) 0; border-bottom:0.5px solid var(--border); font-size:clamp(14px,1.4vw,20px); }
+.frow:last-child { border-bottom:none; }
+.fkey { color:var(--text2); }
+.fval { font-weight:500; }
+.fval.o { color:var(--orange); }
+
+/* PLAN */
+.pgrid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:clamp(10px,1.5vw,20px); }
+.plan { background:var(--bg3); border:0.5px solid var(--border); border-radius:10px; padding:clamp(16px,2vw,28px); position:relative; }
+.plan.pop { border-color:var(--orange); }
+.pbadge { position:absolute; top:-11px; left:50%; transform:translateX(-50%); background:var(--orange); color:#fff; font-size:clamp(10px,0.9vw,12px); padding:3px 12px; border-radius:10px; white-space:nowrap; }
+.pname { font-size:clamp(10px,0.9vw,13px); letter-spacing:2px; color:var(--text3); margin-bottom:10px; }
+.pprice { font-family:'Playfair Display',serif; font-size:clamp(28px,3.2vw,44px); font-weight:700; margin-bottom:4px; }
+.pusers { font-size:clamp(12px,1.2vw,16px); color:var(--text3); margin-bottom:12px; }
+.plist { list-style:none; }
+.plist li { font-size:clamp(13px,1.3vw,18px); color:var(--text2); padding:clamp(5px,0.6vw,9px) 0; border-bottom:0.5px solid var(--border); display:flex; gap:8px; }
+.plist li:last-child { border-bottom:none; }
+.plist li::before { content:'—'; color:var(--orange); flex-shrink:0; }
+
+/* GTM */
+.gtrack { background:var(--bg3); border:0.5px solid var(--border); border-radius:10px; padding:clamp(16px,2vw,26px); }
+.ghead { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.gbadge { font-size:clamp(10px,0.9vw,13px); font-weight:500; letter-spacing:1px; padding:4px 10px; border-radius:4px; color:#fff; }
+.gphase { font-size:clamp(11px,1.1vw,15px); color:var(--text3); }
+.gtitle { font-size:clamp(15px,1.6vw,22px); font-weight:500; margin-bottom:12px; }
+.gitem { font-size:clamp(13px,1.3vw,18px); color:var(--text2); padding:clamp(5px,0.7vw,10px) 0; border-bottom:0.5px solid var(--border); display:flex; gap:8px; }
+.gitem:last-of-type { border-bottom:none; }
+.gitem::before { content:'—'; color:var(--orange); flex-shrink:0; }
+.gtarget { display:flex; justify-content:space-between; margin-top:12px; padding-top:10px; border-top:0.5px solid var(--border); font-size:clamp(12px,1.2vw,16px); }
+.gchip { background:var(--bg2); border:0.5px solid var(--border2); border-radius:4px; padding:5px 12px; font-size:clamp(13px,1.3vw,17px); color:var(--text2); }
+
+/* ADV */
+.agrid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:clamp(10px,1.2vw,16px); }
+.adv { background:var(--bg3); border:0.5px solid var(--border); border-radius:10px; padding:clamp(14px,1.8vw,24px); }
+.adv p { font-size:clamp(13px,1.3vw,18px); color:var(--text2); line-height:1.55; }
+.adv-full { grid-column:1/-1; background:var(--bg3); border:0.5px solid var(--orange); border-radius:10px; padding:clamp(14px,1.8vw,24px); display:grid; grid-template-columns:auto 1fr 1fr 1fr; gap:clamp(12px,1.5vw,20px); align-items:start; }
+.adv-full-badge { background:var(--orange); color:#fff; font-size:clamp(10px,0.9vw,13px); font-weight:500; letter-spacing:1px; padding:5px 12px; border-radius:5px; white-space:nowrap; align-self:center; }
+.adv-full-col h4 { font-size:clamp(13px,1.3vw,18px); font-weight:500; margin-bottom:4px; }
+.adv-full-col p { font-size:clamp(12px,1.1vw,15px); color:var(--text3); line-height:1.5; }
+
+/* TSTACK */
+.tstack { display:grid; grid-template-columns:repeat(6,1fr); gap:clamp(6px,0.8vw,12px); }
+.tchip { background:var(--bg3); border:0.5px solid var(--border2); border-radius:6px; padding:clamp(10px,1.2vw,16px); text-align:center; }
+.tchip-name { font-size:clamp(13px,1.3vw,18px); font-weight:500; color:var(--orange); margin-bottom:3px; }
+.tchip-role { font-size:clamp(11px,1vw,14px); color:var(--text3); }
+.tmoat { border:0.5px solid var(--border); border-left:3px solid var(--orange); border-radius:0 10px 10px 0; padding:clamp(12px,1.4vw,20px) clamp(16px,2vw,26px); font-size:clamp(15px,1.6vw,22px); color:var(--text2); }
+.tmoat span { color:var(--text); }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-logo">Team<span>Sight</span></div>
+  <div class="nav-counter" id="nav-counter">1 / 13</div>
+</nav>
+
+<div id="deck">
+
+<!-- S1: ТИТУЛЬНЫЙ -->
+<section class="slide active" id="s1">
+  <div style="font-family:'Playfair Display',serif;font-size:clamp(64px,9vw,120px);font-weight:700;line-height:1;margin-bottom:clamp(16px,2vw,28px);">Team<span style="color:var(--orange);font-style:italic;">Sight</span></div>
+  <div style="font-size:clamp(18px,2.2vw,32px);color:var(--text2);max-width:640px;margin-bottom:clamp(24px,3vw,40px);line-height:1.5;">AI-платформа, которая предсказывает выгорание удалённых сотрудников за 2–4 недели до того, как это случится.</div>
+  <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:clamp(28px,3.5vw,48px);">
+    <span style="border:0.5px solid var(--border2);border-radius:20px;padding:6px 16px;font-size:clamp(12px,1.2vw,16px);color:var(--text3);">B2B SaaS</span>
+    <span style="border:0.5px solid var(--border2);border-radius:20px;padding:6px 16px;font-size:clamp(12px,1.2vw,16px);color:var(--text3);">Искусственный интеллект</span>
+    <span style="border:0.5px solid var(--border2);border-radius:20px;padding:6px 16px;font-size:clamp(12px,1.2vw,16px);color:var(--text3);">HR Tech</span>
+    <span style="border:0.5px solid var(--border2);border-radius:20px;padding:6px 16px;font-size:clamp(12px,1.2vw,16px);color:var(--text3);">Удалённая работа</span>
+  </div>
+  <div style="display:flex;gap:2px;">
+    <div style="background:var(--bg3);border:0.5px solid var(--border);padding:clamp(14px,1.8vw,24px) clamp(20px,2.5vw,36px);border-radius:8px 0 0 8px;min-width:140px;">
+      <div style="font-family:'Playfair Display',serif;font-size:clamp(26px,3vw,42px);font-weight:700;color:var(--orange);margin-bottom:4px;">$180B+</div>
+      <div style="font-size:clamp(11px,1vw,14px);color:var(--text3);">Размер рынка</div>
+    </div>
+    <div style="background:var(--bg3);border:0.5px solid var(--border);padding:clamp(14px,1.8vw,24px) clamp(20px,2.5vw,36px);min-width:140px;">
+      <div style="font-family:'Playfair Display',serif;font-size:clamp(26px,3vw,42px);font-weight:700;margin-bottom:4px;">48%</div>
+      <div style="font-size:clamp(11px,1vw,14px);color:var(--text3);">Работают удалённо</div>
+    </div>
+    <div style="background:var(--bg3);border:0.5px solid var(--border);padding:clamp(14px,1.8vw,24px) clamp(20px,2.5vw,36px);border-radius:0 8px 8px 0;min-width:140px;">
+      <div style="font-family:'Playfair Display',serif;font-size:clamp(26px,3vw,42px);font-weight:700;margin-bottom:4px;">MVP</div>
+      <div style="font-size:clamp(11px,1vw,14px);color:var(--text3);">В разработке</div>
+    </div>
+  </div>
+  <div style="margin-top:clamp(20px,2.5vw,36px);font-size:clamp(14px,1.4vw,20px);color:var(--text3);">Natan L. &nbsp;·&nbsp; <span style="color:var(--text2);">Amirkhan A.</span></div>
+</section>
+
+<!-- S2: ПРОБЛЕМА -->
+<section class="slide" id="s2">
+  <div class="sl">Проблема</div>
+  <h2>Менеджеры узнают слишком поздно</h2>
+  <div style="margin-top:clamp(16px,2vw,28px);flex:1;display:flex;flex-direction:column;justify-content:center;">
+    <div class="row-item">
+      <div class="row-num">86%</div>
+      <div class="row-body">
+        <h3>Удалённых сотрудников выгорают</h3>
+        <p>Выгорание невидимо. До тех пор, пока не стало слишком поздно.</p>
+      </div>
+    </div>
+    <div class="row-item">
+      <div class="row-num">$8.8T</div>
+      <div class="row-body">
+        <h3>Теряет мировая экономика каждый год</h3>
+        <p>Замена одного разработчика стоит от 50% до 200% его годовой зарплаты. Плюс три месяца пока новый войдёт в курс.</p>
+      </div>
+    </div>
+    <div class="row-item">
+      <div class="row-num">75%</div>
+      <div class="row-body">
+        <h3>Команд работают вслепую</h3>
+        <p>Без единого инструмента который предупреждает заранее.</p>
+      </div>
+    </div>
+  </div>
+  <div class="bottom-bar">Culture Amp, Lattice, 15Five — показывают что уже случилось. <span style="color:var(--text);">Это зеркало заднего вида.</span></div>
+</section>
+
+<!-- S3: РЕШЕНИЕ -->
+<section class="slide" id="s3">
+  <div class="sl">Решение</div>
+  <h2>TeamSight предупреждает за 2–4 недели</h2>
+  <div class="body-text">Сотрудник отвечает на 10 вопросов раз в неделю — 5 минут. Не «оцени стресс от 1 до 10». Факты: сколько ночей спал меньше 6 часов, сколько раз работал после 20:00.</div>
+  <div class="divider"></div>
+  <div class="g3" style="margin-top:0;flex:1;align-content:center;">
+    <div class="card">
+      <div class="card-label">Сотрудник</div>
+      <div class="card-num" style="font-size:clamp(22px,2.8vw,40px);">5 минут</div>
+      <div class="card-text">Анонимный опрос раз в неделю. Никакой слежки.</div>
+    </div>
+    <div class="card" style="border-color:var(--orange);">
+      <div class="card-label">AI</div>
+      <div class="card-num" style="font-size:clamp(22px,2.8vw,40px);">90%</div>
+      <div class="card-text">Точность предсказания. Анализ паттернов за 8 недель.</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Менеджер</div>
+      <div class="card-num" style="font-size:clamp(22px,2.8vw,40px);">2–4 нед</div>
+      <div class="card-text">Предупреждение и конкретный план действий заранее.</div>
+    </div>
+  </div>
+  <div class="bottom-bar" style="margin-top:clamp(12px,1.5vw,20px);">Снижение текучести на <span style="color:var(--text);">43%</span> · Экономия <span style="color:var(--text);">$2,000–10,000</span> на сотрудника · Рост продуктивности на <span style="color:var(--text);">20–30%</span></div>
+</section>
+
+<!-- S4: ТЕХНОЛОГИИ -->
+<section class="slide" id="s4">
+  <div class="sl">Технологии</div>
+  <h2>Не просто опрос — предиктивный движок</h2>
+  <div class="tlayers" style="margin-top:clamp(14px,1.8vw,24px);margin-bottom:clamp(12px,1.5vw,20px);">
+    <div class="tlayer">
+      <div class="tlayer-label">СЛОЙ 1 · СБОР ДАННЫХ</div>
+      <div class="titem"><h5>Поведенческие вопросы</h5><p>Факты, не ощущения — сложнее подделать</p></div>
+      <div class="titem"><h5>Перекрёстная валидация</h5><p>Самооценка vs активность в Slack и календаре</p></div>
+      <div class="titem"><h5>8 недель истории</h5><p>Один фейк не ломает модель</p></div>
+    </div>
+    <div class="tlayer" style="border-left:0.5px solid var(--border);border-right:0.5px solid var(--border);">
+      <div class="tlayer-label">СЛОЙ 2 · AI ДВИЖОК</div>
+      <div class="titem"><h5>Индивидуальный baseline</h5><p>Норма каждого — не средние по рынку</p></div>
+      <div class="titem"><h5>Предсказание выгорания</h5><p>Точность 90% · паттерны за 8 недель</p></div>
+      <div class="titem"><h5>OpenAI API</h5><p>Персональные рекомендации для менеджера</p></div>
+    </div>
+    <div class="tlayer">
+      <div class="tlayer-label">СЛОЙ 3 · РЕЗУЛЬТАТ</div>
+      <div class="titem"><h5>Дашборд менеджера</h5><p>Алерты + конкретный план действий</p></div>
+      <div class="titem"><h5>Дашборд сотрудника</h5><p>Личный score · тренды · советы</p></div>
+      <div class="titem"><h5>Интеграции</h5><p>Slack · Jira · Asana · MS Teams</p></div>
+    </div>
+  </div>
+  <div class="tstack" style="margin-bottom:clamp(10px,1.2vw,16px);">
+    <div class="tchip"><div class="tchip-name">Next.js</div><div class="tchip-role">Frontend</div></div>
+    <div class="tchip"><div class="tchip-name">Supabase</div><div class="tchip-role">Backend</div></div>
+    <div class="tchip"><div class="tchip-name">OpenAI API</div><div class="tchip-role">AI</div></div>
+    <div class="tchip"><div class="tchip-name">Python</div><div class="tchip-role">ML модели</div></div>
+    <div class="tchip"><div class="tchip-name">Vercel</div><div class="tchip-role">Деплой</div></div>
+    <div class="tchip"><div class="tchip-name">Stripe</div><div class="tchip-role">Платежи</div></div>
+  </div>
+  <div class="tmoat">Это не форма с опросом. <span>Продольная система поведенческого интеллекта — точнее с каждой неделей данных.</span></div>
+</section>
+
+<!-- S5: РЫНОК -->
+<section class="slide" id="s5">
+  <div class="sl">Рынок</div>
+  <h2>Огромный рынок в идеальный момент</h2>
+  <div class="g3" style="margin-top:clamp(16px,2vw,28px);margin-bottom:clamp(14px,1.8vw,24px);">
+    <div class="card" style="text-align:center;">
+      <div class="card-label">TAM</div>
+      <div class="card-num" style="color:var(--orange);">$180B+</div>
+      <div class="card-text">Remote Workplace Services + AI в HR</div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="card-label">SAM</div>
+      <div class="card-num">$15B</div>
+      <div class="card-text">HR Analytics + Employee Engagement</div>
+    </div>
+    <div class="card" style="text-align:center;">
+      <div class="card-label">SOM · 3 года</div>
+      <div class="card-num">$150M</div>
+      <div class="card-text">США, Европа, СНГ · IT и digital-агентства</div>
+    </div>
+  </div>
+  <div class="g3">
+    <div class="card">
+      <div class="card-label">Удалённая работа</div>
+      <div style="display:flex;justify-content:space-between;padding:clamp(6px,0.8vw,12px) 0;border-bottom:0.5px solid var(--border);font-size:clamp(14px,1.5vw,20px);"><span style="color:var(--text2);">Мировая рабочая сила</span><span style="color:var(--orange);font-weight:500;">48%</span></div>
+      <div style="display:flex;justify-content:space-between;padding:clamp(6px,0.8vw,12px) 0;border-bottom:0.5px solid var(--border);font-size:clamp(14px,1.5vw,20px);"><span style="color:var(--text2);">CAGR рынка</span><span style="color:var(--orange);font-weight:500;">23.1%</span></div>
+      <div style="display:flex;justify-content:space-between;padding:clamp(6px,0.8vw,12px) 0;font-size:clamp(14px,1.5vw,20px);"><span style="color:var(--text2);">Рабочих мест к 2030</span><span style="font-weight:500;">90 млн</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">AI в HR</div>
+      <div style="display:flex;justify-content:space-between;padding:clamp(6px,0.8vw,12px) 0;border-bottom:0.5px solid var(--border);font-size:clamp(14px,1.5vw,20px);"><span style="color:var(--text2);">Внедрение</span><span style="color:var(--orange);font-weight:500;">43%</span></div>
+      <div style="display:flex;justify-content:space-between;padding:clamp(6px,0.8vw,12px) 0;border-bottom:0.5px solid var(--border);font-size:clamp(14px,1.5vw,20px);"><span style="color:var(--text2);">Ежегодный рост</span><span style="color:var(--orange);font-weight:500;">65%</span></div>
+      <div style="display:flex;justify-content:space-between;padding:clamp(6px,0.8vw,12px) 0;font-size:clamp(14px,1.5vw,20px);"><span style="color:var(--text2);">CAGR</span><span style="font-weight:500;">15.94%</span></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Кризис выгорания</div>
+      <div style="display:flex;justify-content:space-between;padding:clamp(6px,0.8vw,12px) 0;border-bottom:0.5px solid var(--border);font-size:clamp(14px,1.5vw,20px);"><span style="color:var(--text2);">Выгорают удалённо</span><span style="color:var(--orange);font-weight:500;">86%</span></div>
+      <div style="display:flex;justify-content:space-between;padding:clamp(6px,0.8vw,12px) 0;border-bottom:0.5px solid var(--border);font-size:clamp(14px,1.5vw,20px);"><span style="color:var(--text2);">Потери мировые</span><span style="color:var(--orange);font-weight:500;">$8.8T</span></div>
+      <div style="display:flex;justify-content:space-between;padding:clamp(6px,0.8vw,12px) 0;font-size:clamp(14px,1.5vw,20px);"><span style="color:var(--text2);">Без инструментов</span><span style="font-weight:500;">75%</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- S6: БИЗ МОДЕЛЬ -->
+<section class="slide" id="s6">
+  <div class="sl">Бизнес-модель</div>
+  <h2>SaaS подписка — растёт вместе с клиентом</h2>
+  <div class="pgrid" style="margin-top:clamp(14px,1.8vw,24px);margin-bottom:clamp(12px,1.5vw,20px);">
+    <div class="plan">
+      <div class="pname">STARTER</div>
+      <div class="pprice">$10<span style="font-size:clamp(14px,1.5vw,20px);color:var(--text3);">/user/мес</span></div>
+      <div class="pusers">до 50 сотрудников</div>
+      <ul class="plist"><li>Дашборд аналитики</li><li>Базовая аналитика</li><li>Email отчёты</li><li>14 дней бесплатно</li></ul>
+    </div>
+    <div class="plan pop">
+      <div class="pbadge">★ ПОПУЛЯРНЫЙ</div>
+      <div class="pname">GROWTH</div>
+      <div class="pprice">$15<span style="font-size:clamp(14px,1.5vw,20px);color:var(--text3);">/user/мес</span></div>
+      <div class="pusers">50–200 сотрудников</div>
+      <ul class="plist"><li>Всё из Starter</li><li>AI предсказание выгорания</li><li>AI рекомендации</li><li>Slack / Teams интеграция</li></ul>
+    </div>
+    <div class="plan">
+      <div class="pname">ENTERPRISE</div>
+      <div class="pprice" style="font-size:clamp(24px,3vw,40px);">Custom</div>
+      <div class="pusers">200+ сотрудников</div>
+      <ul class="plist"><li>Всё из Growth</li><li>SSO / SAML</li><li>GDPR / HIPAA</li><li>Персональный менеджер</li></ul>
+    </div>
+  </div>
+  <div class="g4">
+    <div class="card" style="text-align:center;"><div class="card-label">LTV:CAC</div><div class="card-num" style="color:var(--orange);">10–30x</div><div class="card-text">рынок — 3x</div></div>
+    <div class="card" style="text-align:center;"><div class="card-label">Gross Margin</div><div class="card-num" style="color:var(--orange);">80%+</div><div class="card-text"></div></div>
+    <div class="card" style="text-align:center;"><div class="card-label">Окупаемость</div><div class="card-num">1–3 мес</div><div class="card-text"></div></div>
+    <div class="card" style="text-align:center;"><div class="card-label">Break-even</div><div class="card-num">Мес 6</div><div class="card-text"></div></div>
+  </div>
+</section>
+
+<!-- S7: КОНКУРЕНТЫ -->
+<section class="slide" id="s7" style="padding:clamp(16px,2vw,28px) clamp(32px,4vw,60px);">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;flex-shrink:0;">
+    <div>
+      <div class="sl" style="margin-bottom:6px;">Конкуренты</div>
+      <h2>Все реактивные.<br>Мы единственные предиктивные.</h2>
+    </div>
+    <div class="comp-note" style="text-align:right;margin-top:8px;">← Этот квадрант пустой.<br>Мы там одни.</div>
+  </div>
+  <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-height:0;gap:4px;">
+    <div style="font-size:clamp(13px,1.3vw,18px);color:var(--text3);letter-spacing:1px;">ДОСТУПНЫЙ ↑</div>
+    <div style="display:flex;align-items:center;gap:8px;width:100%;flex:1;min-height:0;">
+      <div style="writing-mode:vertical-rl;transform:rotate(180deg);font-size:clamp(12px,1.2vw,16px);color:var(--text3);letter-spacing:1px;flex-shrink:0;white-space:nowrap;">← РЕАКТИВНЫЙ</div>
+      <svg viewBox="0 0 900 480" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:100%;display:block;" preserveAspectRatio="xMidYMid meet">
+        <!-- Quadrant backgrounds -->
+        <rect x="2" y="2" width="446" height="236" rx="8" fill="#161616"/>
+        <rect x="452" y="2" width="446" height="236" rx="8" fill="#161616"/>
+        <rect x="2" y="242" width="446" height="236" rx="8" fill="#161616"/>
+        <rect x="452" y="242" width="446" height="236" rx="8" fill="#161616"/>
+        <!-- Axes -->
+        <line x1="450" y1="0" x2="450" y2="480" stroke="#363636" stroke-width="2"/>
+        <line x1="0" y1="240" x2="900" y2="240" stroke="#363636" stroke-width="2"/>
+        <!-- Arrows -->
+        <polygon points="894,235 894,245 908,240" fill="#444"/>
+        <polygon points="6,235 6,245 -8,240" fill="#444"/>
+        <polygon points="444,6 456,6 450,-8" fill="#444"/>
+        <polygon points="444,474 456,474 450,488" fill="#444"/>
+        <!-- Axis labels -->
+        <text x="18" y="234" font-size="15" fill="#555" font-family="DM Sans,sans-serif">Реактивный</text>
+        <text x="882" y="234" text-anchor="end" font-size="15" fill="#555" font-family="DM Sans,sans-serif">Предиктивный</text>
+
+        <!-- 15Five: top-left -->
+        <rect x="40" y="36" width="108" height="38" rx="6" fill="#1e1e1e" stroke="#363636" stroke-width="1"/>
+        <text x="94" y="59" text-anchor="middle" font-size="17" fill="#cccccc" font-family="DM Sans,sans-serif">15Five</text>
+
+        <!-- Culture Amp: top-left lower -->
+        <rect x="70" y="104" width="138" height="38" rx="6" fill="#1e1e1e" stroke="#363636" stroke-width="1"/>
+        <text x="139" y="127" text-anchor="middle" font-size="17" fill="#cccccc" font-family="DM Sans,sans-serif">Culture Amp</text>
+
+        <!-- Lattice: bottom-left -->
+        <rect x="52" y="272" width="100" height="38" rx="6" fill="#1e1e1e" stroke="#363636" stroke-width="1"/>
+        <text x="102" y="295" text-anchor="middle" font-size="17" fill="#cccccc" font-family="DM Sans,sans-serif">Lattice</text>
+
+        <!-- Leapsome: bottom-left lower -->
+        <rect x="80" y="344" width="120" height="38" rx="6" fill="#1e1e1e" stroke="#363636" stroke-width="1"/>
+        <text x="140" y="367" text-anchor="middle" font-size="17" fill="#cccccc" font-family="DM Sans,sans-serif">Leapsome</text>
+
+        <!-- SAP: bottom-right -->
+        <rect x="490" y="368" width="72" height="38" rx="6" fill="#1e1e1e" stroke="#363636" stroke-width="1"/>
+        <text x="526" y="391" text-anchor="middle" font-size="17" fill="#cccccc" font-family="DM Sans,sans-serif">SAP</text>
+
+        <!-- Workday: bottom-right -->
+        <rect x="650" y="400" width="112" height="38" rx="6" fill="#1e1e1e" stroke="#363636" stroke-width="1"/>
+        <text x="706" y="423" text-anchor="middle" font-size="17" fill="#cccccc" font-family="DM Sans,sans-serif">Workday</text>
+
+        <!-- TeamSight: top-right — big and prominent -->
+        <rect x="620" y="20" width="200" height="56" rx="10" fill="#E8650A"/>
+        <text x="720" y="53" text-anchor="middle" font-size="24" fill="white" font-weight="500" font-family="DM Sans,sans-serif">TeamSight</text>
+      </svg>
+      <div style="writing-mode:vertical-rl;font-size:clamp(12px,1.2vw,16px);color:var(--text3);letter-spacing:1px;flex-shrink:0;white-space:nowrap;">ПРЕДИКТИВНЫЙ →</div>
+    </div>
+    <div style="font-size:clamp(13px,1.3vw,18px);color:var(--text3);letter-spacing:1px;">↓ ДОРОГОЙ</div>
+  </div>
+</section>
+
+<!-- S8: КОНКУРЕНТНЫЕ ПРЕИМУЩЕСТВА -->
+<section class="slide" id="s8">
+  <div class="sl">Конкурентные преимущества</div>
+  <h2>Почему TeamSight побеждает</h2>
+  <div class="agrid" style="margin-top:clamp(14px,1.8vw,24px);">
+    <div class="adv">
+      <div style="font-size:clamp(18px,2.2vw,32px);font-weight:500;color:var(--orange);margin-bottom:8px;">Предиктивный AI</div>
+      <p>Предупреждаем за 2–4 недели до выгорания. Ни один конкурент этого не делает.</p>
+    </div>
+    <div class="adv">
+      <div style="font-size:clamp(18px,2.2vw,32px);font-weight:500;color:var(--text);margin-bottom:8px;">Remote-first</div>
+      <p>Создан с нуля для удалённых команд — не адаптация офисного инструмента.</p>
+    </div>
+    <div class="adv">
+      <div style="font-size:clamp(18px,2.2vw,32px);font-weight:500;color:var(--orange);margin-bottom:8px;">Точность 90%</div>
+      <p>AI-модель на поведенческих паттернах: стресс, сон, нагрузка, поддержка.</p>
+    </div>
+    <div class="adv">
+      <div style="font-size:clamp(18px,2.2vw,32px);font-weight:500;color:var(--text);margin-bottom:8px;">Приватность</div>
+      <p>Никакой слежки. Анонимные самооценки. GDPR из коробки.</p>
+    </div>
+    <div class="adv">
+      <div style="font-size:clamp(18px,2.2vw,32px);font-weight:500;color:var(--orange);margin-bottom:8px;">Действия, не данные</div>
+      <p>Менеджер получает конкретные шаги — не просто красивые графики.</p>
+    </div>
+    <div class="adv">
+      <div style="font-size:clamp(18px,2.2vw,32px);font-weight:500;color:var(--text);margin-bottom:8px;">Доступно для SMB</div>
+      <p>От $10/user/мес. Запуск за минуты без долгого внедрения.</p>
+    </div>
+    <div class="adv-full">
+      <span class="adv-full-badge">ЗАЩИТА ОТ ФАЛЬСИФИКАЦИИ</span>
+      <div class="adv-full-col"><h4>Поведенческие вопросы</h4><p>Факты, не ощущения — сложнее подделать</p></div>
+      <div class="adv-full-col"><h4>Перекрёстная валидация</h4><p>Самооценка vs Slack, календарь, рабочие часы</p></div>
+      <div class="adv-full-col"><h4>Тренды за 8 недель</h4><p>Один фейк не влияет на модель</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- S9: GTM -->
+<section class="slide" id="s9">
+  <div class="sl">Go-to-Market</div>
+  <h2>Как мы достигаем $500K ARR</h2>
+  <div class="g3" style="margin-top:clamp(14px,1.8vw,24px);margin-bottom:clamp(10px,1.2vw,16px);">
+    <div class="gtrack">
+      <div class="ghead"><span class="gbadge" style="background:var(--orange);">ТРЕК 1</span><span class="gphase">Месяцы 1–3</span></div>
+      <div class="gtitle">Продажи основателя</div>
+      <div class="gitem">LinkedIn outreach: 50 CEO в неделю</div>
+      <div class="gitem">Бесплатный калькулятор выгорания как лид-магнит</div>
+      <div class="gitem">5 design-партнёров для валидации</div>
+      <div class="gtarget"><span style="color:var(--text3);letter-spacing:1px;">ЦЕЛЬ</span><span style="font-weight:500;color:var(--orange);">$5K MRR</span></div>
+    </div>
+    <div class="gtrack">
+      <div class="ghead"><span class="gbadge" style="background:var(--orange-dim);">ТРЕК 2</span><span class="gphase">Месяцы 4–6</span></div>
+      <div class="gtitle">Product-led growth</div>
+      <div class="gitem">SEO-контент вокруг выгорания команд</div>
+      <div class="gitem">14 дней бесплатно без карты</div>
+      <div class="gitem">HR и remote work подкасты</div>
+      <div class="gtarget"><span style="color:var(--text3);letter-spacing:1px;">ЦЕЛЬ</span><span style="font-weight:500;color:var(--orange-dim);">$15K MRR</span></div>
+    </div>
+    <div class="gtrack">
+      <div class="ghead"><span class="gbadge" style="background:#5a3004;">ТРЕК 3</span><span class="gphase">Месяцы 7–12</span></div>
+      <div class="gtitle">Партнёрства</div>
+      <div class="gitem">Реферальная программа</div>
+      <div class="gitem">Маркетплейсы Slack, Notion, Asana, Jira</div>
+      <div class="gitem">Microsoft Teams AppSource</div>
+      <div class="gtarget"><span style="color:var(--text3);letter-spacing:1px;">ЦЕЛЬ</span><span style="font-weight:500;color:#c07030;">$50K MRR</span></div>
+    </div>
+  </div>
+  <div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;padding:clamp(12px,1.5vw,20px) clamp(16px,2vw,28px);display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <span style="font-size:clamp(10px,0.9vw,13px);letter-spacing:1px;color:var(--text3);flex-shrink:0;">ИНТЕГРАЦИИ</span>
+    <span class="gchip">Slack</span><span class="gchip">Microsoft Teams</span><span class="gchip">Notion</span><span class="gchip">Asana</span><span class="gchip">Jira</span>
+    <span style="margin-left:auto;font-size:clamp(12px,1.2vw,16px);color:var(--text3);">Маркетплейс → органика → снижение CAC</span>
+  </div>
+</section>
+
+<!-- S10: ФИНАНСОВАЯ МОДЕЛЬ -->
+<section class="slide" id="s10">
+  <div class="sl">Финансовая модель</div>
+  <h2>Путь к $500K ARR</h2>
+  <div class="fmilestones" style="margin-top:clamp(14px,1.8vw,24px);margin-bottom:clamp(12px,1.5vw,20px);">
+    <div class="fmile"><div class="fmlabel">МЕСЯЦ 3</div><div class="fmnum">$5K</div><div class="fmdesc">MRR · первые клиенты</div></div>
+    <div class="fmile"><div class="fmlabel">МЕСЯЦ 6</div><div class="fmnum">$15K</div><div class="fmdesc">MRR · break-even</div></div>
+    <div class="fmile"><div class="fmlabel">МЕСЯЦ 12</div><div class="fmnum">$50K</div><div class="fmdesc">MRR · прибыльность</div></div>
+    <div class="fmile"><div class="fmlabel">ГОД 1 ARR</div><div class="fmnum">$500K</div><div class="fmdesc">целевой показатель</div></div>
+  </div>
+  <div class="g2">
+    <div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;padding:clamp(16px,2vw,28px);">
+      <div style="font-size:clamp(10px,0.9vw,13px);letter-spacing:1px;color:var(--text3);margin-bottom:clamp(12px,1.5vw,20px);">UNIT ECONOMICS</div>
+      <div class="frow"><span class="fkey">CAC</span><span class="fval">$200–500</span></div>
+      <div class="frow"><span class="fkey">LTV</span><span class="fval">$5,000–15,000</span></div>
+      <div class="frow"><span class="fkey">LTV:CAC</span><span class="fval o">10–30x</span></div>
+      <div class="frow"><span class="fkey">Gross Margin</span><span class="fval o">80%+</span></div>
+      <div class="frow"><span class="fkey">Окупаемость</span><span class="fval">1–3 месяца</span></div>
+    </div>
+    <div style="background:var(--bg3);border:0.5px solid var(--border);border-radius:10px;padding:clamp(16px,2vw,28px);">
+      <div style="font-size:clamp(10px,0.9vw,13px);letter-spacing:1px;color:var(--text3);margin-bottom:clamp(12px,1.5vw,20px);">ОПЕРАЦИОННЫЕ РАСХОДЫ · ГОД 1</div>
+      <div class="frow"><span class="fkey">Хостинг (Vercel/AWS)</span><span class="fval">$1,800/год</span></div>
+      <div class="frow"><span class="fkey">OpenAI API</span><span class="fval">$1,200/год</span></div>
+      <div class="frow"><span class="fkey">Supabase + инструменты</span><span class="fval">$600/год</span></div>
+      <div class="frow"><span class="fkey">Домен + SSL</span><span class="fval">$50/год</span></div>
+      <div class="frow"><span class="fkey">Маркетинг (до PMF)</span><span class="fval">$0</span></div>
+      <div class="frow"><span class="fkey" style="color:var(--text);font-weight:500;">Итого</span><span class="fval o">~$3,650/год</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- S11: МАСШТАБИРОВАНИЕ -->
+<section class="slide" id="s11">
+  <div class="sl">Масштабирование</div>
+  <h2>Большая картина</h2>
+  <div class="scgrid" style="margin-top:clamp(14px,1.8vw,24px);">
+    <div class="scyear">
+      <div class="scylabel">ГОД 1 · ВАЛИДАЦИЯ</div>
+      <div class="scmrr">$50K MRR</div>
+      <div class="scsub">50–100 клиентов · США / Европа / СНГ</div>
+      <div class="scitem">Product-market fit доказан</div>
+      <div class="scitem">Платформа полностью запущена</div>
+      <div class="scitem">Первые кейсы клиентов</div>
+      <div class="scitem">Seed раунд закрыт</div>
+    </div>
+    <div class="scyear" style="border-color:var(--orange);">
+      <div class="scylabel">ГОД 2 · РОСТ</div>
+      <div class="scmrr" style="color:var(--orange);">$200K MRR</div>
+      <div class="scsub">300–500 клиентов · Series A</div>
+      <div class="scitem">Интеграция Slack, Teams, Jira</div>
+      <div class="scitem">HR-консультанты как канал</div>
+      <div class="scitem">Найм: SDR + Customer Success</div>
+      <div class="scitem">Расширение на Европу</div>
+    </div>
+    <div class="scyear">
+      <div class="scylabel">ГОД 3 · МАСШТАБ</div>
+      <div class="scmrr">$500K+ MRR</div>
+      <div class="scsub">1,000+ клиентов · глобально</div>
+      <div class="scitem">Enterprise 200+ сотрудников</div>
+      <div class="scitem">Выход на рынок APAC</div>
+      <div class="scitem">Предиктивная HR-платформа</div>
+      <div class="scitem">M&A интерес от HR-игроков</div>
+    </div>
+  </div>
+  <div class="g3" style="margin-top:clamp(12px,1.5vw,20px);">
+    <div class="card" style="text-align:center;"><div class="card-label">Долгосрочное видение</div><div class="card-text" style="font-size:clamp(14px,1.5vw,20px);margin-top:8px;">Стандарт управления здоровьем удалённых команд — как Slack стал стандартом общения</div></div>
+    <div class="card" style="text-align:center;"><div class="card-label">Потенциал M&A</div><div class="card-text" style="font-size:clamp(14px,1.5vw,20px);margin-top:8px;">Workday купил HiredScore за $400M. Рынок консолидируется.</div></div>
+    <div class="card" style="text-align:center;"><div class="card-label">Возврат для инвесторов</div><div class="card-text" style="font-size:clamp(14px,1.5vw,20px);margin-top:8px;">Потенциал <span style="color:var(--orange);font-weight:500;">10–20x</span> при достижении Series A за 18–24 месяца</div></div>
+  </div>
+</section>
+
+<!-- S12: ТРЕКШН -->
+<section class="slide" id="s12">
+  <div class="sl">Трекшн и валидация</div>
+  <h2>Рынок уже отвечает</h2>
+  <p style="font-size:clamp(15px,1.6vw,22px);color:var(--text2);margin-top:8px;flex-shrink:0;">До продукта. Без платной рекламы. Всё органически.</p>
+  <div class="tbig" style="margin-top:clamp(14px,1.8vw,24px);margin-bottom:clamp(12px,1.5vw,20px);">
+    <div class="tbox"><div class="tbox-num">1,000+</div><div class="tbox-desc">Прохождений калькулятора</div><div class="tbox-sub">органика · без рекламы</div></div>
+    <div class="tbox"><div class="tbox-num">6</div><div class="tbox-desc">Компаний в переговорах</div><div class="tbox-sub">cold email и звонки</div></div>
+    <div class="tbox"><div class="tbox-num">600+</div><div class="tbox-desc">Сотрудников в pipeline</div><div class="tbox-sub">ждут запуска MVP</div></div>
+  </div>
+  <div class="bottom-bar">Это не идея. Это валидированная проблема с тёплым pipeline — <span style="color:var(--text);">до единого доллара инвестиций.</span></div>
+</section>
+
+<!-- S13: КОНТАКТЫ -->
+<section class="slide" id="s13">
+  <div class="sl" style="text-align:center;">Контакты</div>
+  <div class="ctitle">Делаем удалённую работу здоровой — для каждого сотрудника.</div>
+  <div class="ccards">
+    <div class="ccard">
+      <div class="cavatar">NL</div>
+      <div class="cname">Natan Litvinov</div>
+      <div class="crole">CO-FOUNDER · LEAD DEVELOPER</div>
+      <div class="cemail">litvinovnatan@gmail.com</div>
+      <div class="cli">linkedin.com/in/natan-litvinov-4ab45437a</div>
+    </div>
+    <div class="ccard">
+      <div class="cavatar">AA</div>
+      <div class="cname">Amirkhan Argymbekov</div>
+      <div class="crole">CO-FOUNDER · DEVELOPER & DESIGN</div>
+      <div class="cemail">argumamikhan@gmail.com</div>
+    </div>
+  </div>
+  <div style="margin-top:clamp(16px,2vw,28px);font-size:clamp(14px,1.5vw,20px);color:var(--text3);">Instagram: <span style="color:var(--orange);">@TEAM_SIGHTAI</span></div>
+</section>
+
+</div>
+
+<div class="controls">
+  <button class="arrow-btn" id="btn-prev" onclick="go(-1)" disabled>←</button>
+  <div class="dots-wrap" id="dots"></div>
+  <button class="arrow-btn" id="btn-next" onclick="go(1)">→</button>
+</div>
+
+<script>
+const slides = Array.from(document.querySelectorAll('.slide'));
+const dotsWrap = document.getElementById('dots');
+const btnPrev = document.getElementById('btn-prev');
+const btnNext = document.getElementById('btn-next');
+const counter = document.getElementById('nav-counter');
+let cur = 0;
+
+slides.forEach((_,i) => {
+  const d = document.createElement('div');
+  d.className = 'dot' + (i===0?' active':'');
+  d.onclick = () => goTo(i);
+  dotsWrap.appendChild(d);
+});
+
+function goTo(idx) {
+  if (idx === cur || idx < 0 || idx >= slides.length) return;
+  slides[cur].classList.remove('active');
+  cur = idx;
+  slides[cur].classList.add('active');
+  dotsWrap.querySelectorAll('.dot').forEach((d,i) => d.classList.toggle('active', i===cur));
+  counter.textContent = (cur+1) + ' / ' + slides.length;
+  btnPrev.disabled = cur === 0;
+  btnNext.disabled = cur === slides.length - 1;
+}
+
+function go(dir) { goTo(cur + dir); }
+
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' ') { e.preventDefault(); go(1); }
+  if (e.key==='ArrowLeft'||e.key==='ArrowUp') { e.preventDefault(); go(-1); }
+});
+
+let tx=0, ty=0;
+document.addEventListener('touchstart', e => { tx=e.touches[0].clientX; ty=e.touches[0].clientY; }, {passive:true});
+document.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - tx;
+  const dy = e.changedTouches[0].clientY - ty;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) go(dx<0?1:-1);
+}, {passive:true});
+</script>
+</body>
+</html>
